@@ -1,0 +1,4 @@
+/bases
+*.exe
+app/models/bases/*.db
+*.db
