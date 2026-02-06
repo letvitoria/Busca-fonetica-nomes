@@ -34,15 +34,4 @@ for nome_2 in lista2:
             print(f'"{nome_2}" se parece mais com "{melhor_nome}" (Score: {melhor_score})\n')
         # else:
         #     print(f'"{nome_2}" -> "{melhor_nome}" Baixo Score: {melhor_score})\n')
-"""
-else
-if valor[I]='s' then
-if (valor[I-1] in ['a','á','â','ã','e','i',’í’,'o','ó','ô',
-'u','é','ú','ê')]) and (valor[I+1] in ['a',’á’,’â’,'ã','e',
-'i','í','o','ó','õ','u','ú','é','ê']) then
-begin
-delete(valor,I,1);
-insert(chr($7A),valor,I);
-end;
 
-"""
