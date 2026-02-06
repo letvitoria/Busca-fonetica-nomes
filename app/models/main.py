@@ -1,10 +1,14 @@
 import sqlite3
 import os
 import pandas as pd
+import warnings
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
 from rapidfuzz import fuzz
 from unidecode import unidecode
+
+# Suppress sklearn parallel warning
+warnings.filterwarnings('ignore', message='.*sklearn.utils.parallel.delayed.*')
 
 # Configuração de caminhos baseada na sua estrutura de pastas
 DIR = os.path.dirname(os.path.abspath(__file__))
