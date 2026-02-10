@@ -6,79 +6,123 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
 from rapidfuzz import fuzz
 from unidecode import unidecode
+from tqdm import tqdm
 
-# Suppress sklearn parallel warning
-warnings.filterwarnings('ignore', message='.*sklearn.utils.parallel.delayed.*')
+# Silencia avisos de paralelização do sklearn
+warnings.filterwarnings(
+    'ignore',
+    category=UserWarning,
+    module=r"sklearn\.utils\.parallel",
+)
 
-# Configuração de caminhos baseada na sua estrutura de pastas
+# Configurações de Caminho
 DIR = os.path.dirname(os.path.abspath(__file__))
 PATH_RO = os.path.join(DIR, "bases", "ro_civil.db")
 PATH_BNMP = os.path.join(DIR, "bases", "bnmp.db")
-print("Caminho do banco de dados defnido com sucesso.✅")
 
-def padroniza(texto):
-    return unidecode(str(texto)).strip().lower() if texto else ""
+# --- FUNÇÃO DE NORMALIZAÇÃO FONÉTICA (PT-BR) ---
+def preparacao_fonetica(texto):
+    if not texto:
+        return ""
+    # 1. Remove acentos e coloca em caixa alta
+    texto = unidecode(str(texto)).upper().strip()
+    
+    # 2. Substituições fonéticas manuais (Simulando Metaphone para nomes BR)
+    substituicoes = {
+        "PH": "F", "SH": "X", "CH": "X", 
+        "Y": "I", "K": "C", "W": "V",
+        "LL": "L", "SS": "S", "RR": "R",
+        "Z": "S", "GE": "JE", "GI": "JI",
+        "TS": "S", "TZ": "S", "TH": "T"
+    }
+    for velho, novo in substituicoes.items():
+        texto = texto.replace(velho, novo)
+    
+    return texto
 
-# passo 1 carregamento de dados
-# Banco Maior (Referência: ro_civil)
+# --- CARREGAMENTO DOS DADOS ---
+print("--- Carregando Bancos de Dados --- 🔎")
+
 conn_civilro = sqlite3.connect(PATH_RO)
-print("---Selecionando a primeira tabela ---🔎")
-df_civil = pd.read_sql_query("SELECT rowid, nome FROM pessoas", conn_civilro) #Para caso de mudar o índice do DB, trocar por hash
-#rowid: identificador único de 64 bits integrado automaticamente a quase todas as tabelas, funcionando como a chave primária física. 
+df_civil = pd.read_sql_query("SELECT rowid, nome FROM pessoas", conn_civilro)
 conn_civilro.close()
 
-# Banco Menor (Comparação: bnmp)
 conn_bnmp = sqlite3.connect(PATH_BNMP)
 df_bnmp = pd.read_sql_query("SELECT id, Nome FROM dados_csv", conn_bnmp) 
 conn_bnmp.close()
 
-print(" ---- Verificando Registros Existentes ----")
-print(f"Bases carregadas. RO Civil: {len(df_civil)} registros.")
-print(f"Bases carregadas. BNMP: {len(df_bnmp)} registros.")
-print("---- Iniciando a vetorização.... ----")
-# passo 2 vetorização matemática (SCIKIT-LEARN) ---
-# Criamos a lista de nomes padronizados para o "treinamento" do vetor
-nomes_referencia = df_civil['nome'].apply(padroniza).tolist()
+# Convertendo colunas para listas (Acesso MUITO mais rápido que .iloc no loop)
+nomes_civil_originais = df_civil['nome'].tolist()
+ids_civil = df_civil['rowid'].tolist()
+nomes_bnmp_originais = df_bnmp['Nome'].tolist()
+ids_bnmp = df_bnmp['id'].tolist()
 
-# Transformamos nomes em vetores de 2 e 3 letras (n-grams)
-vectorizer = TfidfVectorizer(analyzer='char', ngram_range=(2, 3))
-tf_idf_matrix = vectorizer.fit_transform(nomes_referencia)
+print(f"Bases carregadas: RO Civil ({len(nomes_civil_originais)}) | BNMP ({len(nomes_bnmp_originais)})")
 
-# Modelo para encontrar os 5 vizinhos mais próximos via Similaridade de Cosseno
+# --- VETORIZAÇÃO ---
+print("\n---- Iniciando Pré-processamento Fonético e Vetorização ----")
+# Criamos a versão "limpa" para o algoritmo trabalhar
+nomes_ref_fonetico = [preparacao_fonetica(n) for n in tqdm(nomes_civil_originais, desc="Limpando RO Civil")]
+nomes_alvo_fonetico = [preparacao_fonetica(n) for n in tqdm(nomes_bnmp_originais, desc="Limpando BNMP")]
+
+# analyzer='char' e ngram_range=(2, 4) capturam sub-partes dos nomes
+vectorizer = TfidfVectorizer(analyzer='char', ngram_range=(2, 4))
+tf_idf_matrix = vectorizer.fit_transform(nomes_ref_fonetico)
+
+# --- TREINAMENTO DO MODELO ---
+# n_neighbors=5 busca os 5 nomes mais parecidos foneticamente
 model = NearestNeighbors(n_neighbors=5, metric='cosine', n_jobs=-1)
 model.fit(tf_idf_matrix)
 
+# Vetoriza a base BNMP para busca
+tf_idf_bnmp = vectorizer.transform(nomes_alvo_fonetico)
 
+# --- BUSCA INTELIGENTE COM PROGRESSO REAL ---
+print("\n---- Iniciando Varredura Vetorial ----")
+
+batch_size = 10000  # Processamos de 10 em 10 mil para atualizar o log
+total_nomes = tf_idf_bnmp.shape[0]
 resultados_para_humano = []
 
-print("Iniciando varredura inteligente...")
+# Barra de progresso para a busca matemática
+with tqdm(total=total_nomes, desc="Buscando Similaridades: ") as pbar:
+    for i in range(0, total_nomes, batch_size):
+        # Seleciona o lote atual
+        fim = min(i + batch_size, total_nomes)
+        lote_vetores = tf_idf_bnmp[i:fim]
+        
+        # Realiza a busca apenas para este lote
+        distancias_lote, indices_lote = model.kneighbors(lote_vetores)
+        
+        # Processa os resultados do lote atual para o RapidFuzz
+        for idx_lote, (distancias, indices) in enumerate(zip(distancias_lote, indices_lote)):
+            idx_global = i + idx_lote
+            nome_alvo_limpo = nomes_alvo_fonetico[idx_global]
+            
+            for vizinho_idx in indices:
+                # Validação final com RapidFuzz
+                score_final = fuzz.token_sort_ratio(nome_alvo_limpo, nomes_ref_fonetico[vizinho_idx])
+                
+                if score_final >= 80:
+                    resultados_para_humano.append({
+                        'id_bnmp': ids_bnmp[idx_global],
+                        'nome_bnmp': nomes_bnmp_originais[idx_global],
+                        'id_ro_civil': ids_civil[vizinho_idx],
+                        'nome_ro_civil': nomes_civil_originais[vizinho_idx],
+                        'score_fonetico': round(score_final, 2)
+                    })
+        
+        pbar.update(fim - i) #
 
-for idx, linha_bnmp in df_bnmp.iterrows():
-    nome_alvo = padroniza(linha_bnmp['Nome'])
-    
-    # Vetoriza o nome do BNMP e busca os 5 candidatos mais parecidos no RO Civil
-    vetor_alvo = vectorizer.transform([nome_alvo])
-    distancias, indices = model.kneighbors(vetor_alvo)
-    
-    for i in indices[0]:
-        nome_candidato = df_civil.iloc[i]['nome']
-        id_candidato = df_civil.iloc[i]['rowid'] #ID de acordo com o index do banco de dados. 
-        
-        # Refinamento final com RapidFuzz para garantir precisão
-        score_final = fuzz.ratio(nome_alvo, padroniza(nome_candidato))
-        
-        # Se o score for alto, guardamos para o agente humano validar
-        if score_final > 75:
-            resultados_para_humano.append({
-                'id_bnmp': linha_bnmp['id'],
-                'nome_bnmp': linha_bnmp['Nome'],
-                'id_ro_civil': id_candidato,
-                'nome_ro_civil': nome_candidato,
-                'score': round(score_final, 2)
-            })
-print("Iniciando passo 2 (salvamento dos resultados...)")
-# --Passo 4 salvamento dos resultados
+# --- SALVAMENTO ---
+print("\n--- Finalizando e salvando resultados ---")
 df_final = pd.DataFrame(resultados_para_humano)
-df_final.to_csv(os.path.join(DIR, 'pendentes_validacao.csv'), index=False, encoding='utf-8-sig')
 
-print(f"Concluído! {len(df_final)} possíveis similaridades encontradas.")
+# Salva em arquivo CSV os resultados com score mais alto
+if not df_final.empty:
+    df_final = df_final.sort_values(by='score_fonetico', ascending=False)
+    output_path = os.path.join(DIR, 'pendentes_validacao_fonetica.csv')
+    df_final.to_csv(output_path, index=False, encoding='utf-8-sig')
+    print(f"Sucesso! {len(df_final)} possíveis matches encontrados em: {output_path}")
+else:
+    print("Nenhum match encontrado com os critérios atuais.")
