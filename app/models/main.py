@@ -2,13 +2,13 @@ import sqlite3
 import os
 import pandas as pd
 import warnings
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer #Aprendizado de máquina
 from sklearn.neighbors import NearestNeighbors
 from rapidfuzz import fuzz
 from unidecode import unidecode
 from tqdm import tqdm
 
-# Silencia avisos de paralelização do sklearn
+# Silencia avisos de paralelização do sklearn (biblioteca de machine learn)
 warnings.filterwarnings(
     'ignore',
     category=UserWarning,
@@ -24,58 +24,65 @@ PATH_BNMP = os.path.join(DIR, "bases", "bnmp.db")
 def preparacao_fonetica(texto):
     if not texto:
         return ""
-    # 1. Remove acentos e coloca em caixa alta
+    #Remove acentos e coloca em caixa alta
     texto = unidecode(str(texto)).upper().strip()
     
-    # 2. Substituições fonéticas manuais (Simulando Metaphone para nomes BR)
+    #Substituições fonéticas manuais (Simulando Metaphone para nomes BR)
     substituicoes = {
         "PH": "F", "SH": "X", "CH": "X", 
         "Y": "I", "K": "C", "W": "V",
         "LL": "L", "SS": "S", "RR": "R",
         "Z": "S", "GE": "JE", "GI": "JI",
         "TS": "S", "TZ": "S", "TH": "T"
-    }
+    }   #Transformando a fonética do padrão EN para PT-BR
+
     for velho, novo in substituicoes.items():
         texto = texto.replace(velho, novo)
-    
+
     return texto
 
 # --- CARREGAMENTO DOS DADOS ---
 print("--- Carregando Bancos de Dados --- 🔎")
 
 conn_civilro = sqlite3.connect(PATH_RO)
-df_civil = pd.read_sql_query("SELECT rowid, nome FROM pessoas", conn_civilro)
+df_civil = pd.read_sql_query("SELECT nif, nome FROM pessoas", conn_civilro)
 conn_civilro.close()
 
 conn_bnmp = sqlite3.connect(PATH_BNMP)
 df_bnmp = pd.read_sql_query("SELECT id, Nome FROM dados_csv", conn_bnmp) 
 conn_bnmp.close()
 
-# Convertendo colunas para listas (Acesso MUITO mais rápido que .iloc no loop)
+# Convertendo colunas para listas (Acelerrar o processo de verificação)
 nomes_civil_originais = df_civil['nome'].tolist()
-ids_civil = df_civil['rowid'].tolist()
+ids_civil = df_civil['nif'].tolist()
 nomes_bnmp_originais = df_bnmp['Nome'].tolist()
 ids_bnmp = df_bnmp['id'].tolist()
 
 print(f"Bases carregadas: RO Civil ({len(nomes_civil_originais)}) | BNMP ({len(nomes_bnmp_originais)})")
 
-# --- VETORIZAÇÃO ---
+#Vetorização dos valores
 print("\n---- Iniciando Pré-processamento Fonético e Vetorização ----")
 # Criamos a versão "limpa" para o algoritmo trabalhar
 nomes_ref_fonetico = [preparacao_fonetica(n) for n in tqdm(nomes_civil_originais, desc="Limpando RO Civil")]
 nomes_alvo_fonetico = [preparacao_fonetica(n) for n in tqdm(nomes_bnmp_originais, desc="Limpando BNMP")]
 
-# analyzer='char' e ngram_range=(2, 4) capturam sub-partes dos nomes
-vectorizer = TfidfVectorizer(analyzer='char', ngram_range=(2, 4))
-tf_idf_matrix = vectorizer.fit_transform(nomes_ref_fonetico)
+#Converte os nomes em vetores numéricos (os números representam as características)
+# Usa análise de caracteres de 2 a 4 letras (n-gramas)
+# Exemplo: "JOÃO" → [0.5, 0.3, 0.8, ...] (padrão numérico
+# Nome: "JOÃO"  →  Vetor: [0.5, 0.3, 0.8, 0.2]
+# Nome: "JUAN"  →  Vetor: [0.6, 0.25, 0.75, 0.15]
+vetorizacao = TfidfVectorizer(analyzer='char', ngram_range=(2, 4))
+tf_idf_matrix = vetorizacao.fit_transform(nomes_ref_fonetico)
 
-# --- TREINAMENTO DO MODELO ---
-# n_neighbors=5 busca os 5 nomes mais parecidos foneticamente
-model = NearestNeighbors(n_neighbors=5, metric='cosine', n_jobs=-1)
+# TREINAMENTO DO MODELO 
+#Busca os cinco nomes mais parecidos.
+model = NearestNeighbors(n_neighbors=5 , metric='cosine', n_jobs=-1)
+#NearestNeighbors -> Organiza tudo de forma inteligente para achar os 'milares' mais rapidamente
+#Mética coseno: mede o ângulo entre os vetores 
 model.fit(tf_idf_matrix)
 
 # Vetoriza a base BNMP para busca
-tf_idf_bnmp = vectorizer.transform(nomes_alvo_fonetico)
+tf_idf_bnmp = vetorizacao.transform(nomes_alvo_fonetico)
 
 # --- BUSCA INTELIGENTE COM PROGRESSO REAL ---
 print("\n---- Iniciando Varredura Vetorial ----")
@@ -87,6 +94,7 @@ resultados_para_humano = []
 # Barra de progresso para a busca matemática
 with tqdm(total=total_nomes, desc="Buscando Similaridades: ") as pbar:
     for i in range(0, total_nomes, batch_size):
+
         # Seleciona o lote atual
         fim = min(i + batch_size, total_nomes)
         lote_vetores = tf_idf_bnmp[i:fim]
@@ -126,3 +134,5 @@ if not df_final.empty:
     print(f"Sucesso! {len(df_final)} possíveis matches encontrados em: {output_path}")
 else:
     print("Nenhum match encontrado com os critérios atuais.")
+
+print("--- Processo encerrado... ---")
