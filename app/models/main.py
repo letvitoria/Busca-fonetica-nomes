@@ -2,137 +2,158 @@ import sqlite3
 import os
 import pandas as pd
 import warnings
-from sklearn.feature_extraction.text import TfidfVectorizer #Aprendizado de máquina
+from sklearn.feature_extraction.text import TfidfVectorizer 
 from sklearn.neighbors import NearestNeighbors
 from rapidfuzz import fuzz
 from unidecode import unidecode
 from tqdm import tqdm
+import gc #Limpar a RAM
 
-# Silencia avisos de paralelização do sklearn (biblioteca de machine learn)
-warnings.filterwarnings(
-    'ignore',
-    category=UserWarning,
-    module=r"sklearn\.utils\.parallel",
-)
+# Suprimir avisos do sklearn
+warnings.filterwarnings('ignore', category=UserWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
+warnings.filterwarnings('ignore', category=UserWarning, module=r"sklearn\.utils\.parallel")
 
-# Configurações de Caminho
+
 DIR = os.path.dirname(os.path.abspath(__file__))
 PATH_RO = os.path.join(DIR, "bases", "ro_civil.db")
 PATH_BNMP = os.path.join(DIR, "bases", "bnmp.db")
 
-# --- FUNÇÃO DE NORMALIZAÇÃO FONÉTICA (PT-BR) ---
 def preparacao_fonetica(texto):
-    if not texto:
-        return ""
-    #Remove acentos e coloca em caixa alta
-    texto = unidecode(str(texto)).upper().strip()
-    
-    #Substituições fonéticas manuais (Simulando Metaphone para nomes BR)
+    if not texto or str(texto).lower() in ['nan', 'None', '']: return ""
+    texto = unidecode(str(texto)).upper().strip() #Remove acentuação
     substituicoes = {
-        "PH": "F", "SH": "X", "CH": "X", 
-        "Y": "I", "K": "C", "W": "V",
-        "LL": "L", "SS": "S", "RR": "R",
-        "Z": "S", "GE": "JE", "GI": "JI",
-        "TS": "S", "TZ": "S", "TH": "T"
-    }   #Transformando a fonética do padrão EN para PT-BR
-
+        "PH": "F", "SH": "X", "CH": "X", "Y": "I", "K": "C", 
+        "W": "V", "LL": "L", "SS": "S", "RR": "R", "Z": "S", 
+        "GE": "JE", "GI": "JI", "TS": "S", "TZ": "S", "TH": "T"
+    }
     for velho, novo in substituicoes.items():
         texto = texto.replace(velho, novo)
-
     return texto
 
-# --- CARREGAMENTO DOS DADOS ---
-print("--- Carregando Bancos de Dados --- 🔎")
+def montar_string_comparacao(nome, mae, pai):
+    """Concatena os nomes disponíveis para criar uma identidade única."""
+    partes = [str(nome)]
+    if mae and str(mae).lower() not in ['nan', 'none', '']: partes.append(str(mae))
+    if pai and str(pai).lower() not in ['nan', 'none', '']: partes.append(str(pai))
+    return " ".join(partes)
 
+# --- CARREGAMENTO DOS DADOS ---
+print("--- Carregando Banco de Dados --- 🔎")
 conn_civilro = sqlite3.connect(PATH_RO)
-df_civil = pd.read_sql_query("SELECT nif, nome FROM pessoas", conn_civilro)
+df_civil = pd.read_sql_query("SELECT DISTINCT nif, nome, nome_mae, nome_pai FROM pessoas", conn_civilro)
 conn_civilro.close()
 
 conn_bnmp = sqlite3.connect(PATH_BNMP)
-df_bnmp = pd.read_sql_query("SELECT id, Nome FROM dados_csv", conn_bnmp) 
+df_bnmp = pd.read_sql_query("SELECT DISTINCT id, Nome, Filiacao1, Filiacao2 FROM dados_csv", conn_bnmp) 
 conn_bnmp.close()
 
-# Convertendo colunas para listas (Acelerrar o processo de verificação)
-nomes_civil_originais = df_civil['nome'].tolist()
+#Listas para acelerrar processamento
+nomes_civil = df_civil['nome'].tolist()
+maes_civil = df_civil['nome_mae'].tolist()
+pais_civil = df_civil['nome_pai'].tolist()
 ids_civil = df_civil['nif'].tolist()
-nomes_bnmp_originais = df_bnmp['Nome'].tolist()
+
+nomes_bnmp = df_bnmp['Nome'].tolist()
+maes_bnmp = df_bnmp['Filiacao1'].tolist()
+pais_bnmp = df_bnmp['Filiacao2'].tolist()
 ids_bnmp = df_bnmp['id'].tolist()
 
-print(f"Bases carregadas: RO Civil ({len(nomes_civil_originais)}) | BNMP ({len(nomes_bnmp_originais)})")
+#Preparação de Strings (nome pessoa + nome dos pais)
+print("--- Preparando dados para pesquisa...")
+civil_composto = [montar_string_comparacao(n, m, p) for n, m, p in zip(df_civil['nome'], df_civil['nome_mae'], df_civil['nome_pai'])]
+bnmp_composto = [montar_string_comparacao(n, m, p) for n, m, p in zip(df_bnmp['Nome'], df_bnmp['Filiacao1'], df_bnmp['Filiacao2'])]
 
-#Vetorização dos valores
-print("\n---- Iniciando Pré-processamento Fonético e Vetorização ----")
-# Criamos a versão "limpa" para o algoritmo trabalhar
-nomes_ref_fonetico = [preparacao_fonetica(n) for n in tqdm(nomes_civil_originais, desc="Limpando RO Civil")]
-nomes_alvo_fonetico = [preparacao_fonetica(n) for n in tqdm(nomes_bnmp_originais, desc="Limpando BNMP")]
+# --- VETORIZAÇÃO  ---
+print("\n---- Padronizando as Strings para pesquisa ----")
+identidades_ref_fonetica = [preparacao_fonetica(s) for s in tqdm(civil_composto, desc="Limpando RO Civil")]
+identidades_alvo_fonetica = [preparacao_fonetica(s) for s in tqdm(bnmp_composto, desc="Limpando BNMP")]
 
-#Converte os nomes em vetores numéricos (os números representam as características)
-# Usa análise de caracteres de 2 a 4 letras (n-gramas)
-# Exemplo: "JOÃO" → [0.5, 0.3, 0.8, ...] (padrão numérico
-# Nome: "JOÃO"  →  Vetor: [0.5, 0.3, 0.8, 0.2]
-# Nome: "JUAN"  →  Vetor: [0.6, 0.25, 0.75, 0.15]
-vetorizacao = TfidfVectorizer(analyzer='char', ngram_range=(2, 4))
-tf_idf_matrix = vetorizacao.fit_transform(nomes_ref_fonetico)
+# Liberar dataframes originais 
+del df_civil, df_bnmp, civil_composto, bnmp_composto
+gc.collect()
 
-# TREINAMENTO DO MODELO 
-#Busca os cinco nomes mais parecidos.
-model = NearestNeighbors(n_neighbors=5 , metric='cosine', n_jobs=-1)
-#NearestNeighbors -> Organiza tudo de forma inteligente para achar os 'milares' mais rapidamente
-#Mética coseno: mede o ângulo entre os vetores 
+vetorizacao = TfidfVectorizer(analyzer='char', ngram_range=(2, 3), max_features=5000) #mudança teste
+tf_idf_matrix = vetorizacao.fit_transform(identidades_ref_fonetica)
+#Aprendiagem
+model = NearestNeighbors(n_neighbors=3, metric='cosine', n_jobs=-1)
 model.fit(tf_idf_matrix)
+tf_idf_bnmp = vetorizacao.transform(identidades_alvo_fonetica)
 
-# Vetoriza a base BNMP para busca
-tf_idf_bnmp = vetorizacao.transform(nomes_alvo_fonetico)
 
-# --- BUSCA INTELIGENTE COM PROGRESSO REAL ---
-print("\n---- Iniciando Varredura Vetorial ----")
+#Inicia varredura (busca por nomes)
+print("\n---- Iniciando Varredura (Nome + Filiação) ----")
 
-batch_size = 10000  # Processamos de 10 em 10 mil para atualizar o log
-total_nomes = tf_idf_bnmp.shape[0]
+batch_size = 5000 
 resultados_para_humano = []
+pares_registrados = set()
 
-# Barra de progresso para a busca matemática
-with tqdm(total=total_nomes, desc="Buscando Similaridades: ") as pbar:
-    for i in range(0, total_nomes, batch_size):
+print("\n---- Iniciando Varredura (Ignorando nomes idênticos/acentuados) ----")
 
-        # Seleciona o lote atual
-        fim = min(i + batch_size, total_nomes)
+batch_size = 5000 
+resultados_para_humano = []
+pares_registrados = set()
+
+with tqdm(total=len(ids_bnmp), desc="Processando: ") as pbar:
+    for i in range(0, len(ids_bnmp), batch_size):
+        fim = min(i + batch_size, len(ids_bnmp))
         lote_vetores = tf_idf_bnmp[i:fim]
-        
-        # Realiza a busca apenas para este lote
         distancias_lote, indices_lote = model.kneighbors(lote_vetores)
         
-        # Processa os resultados do lote atual para o RapidFuzz
-        for idx_lote, (distancias, indices) in enumerate(zip(distancias_lote, indices_lote)):
+        for idx_lote, indices in enumerate(indices_lote):
             idx_global = i + idx_lote
-            nome_alvo_limpo = nomes_alvo_fonetico[idx_global]
+            id_b = ids_bnmp[idx_global]
+            
+            # Normalização rigorosa para comparação: remove acentos e espaços extras
+            n_b_limpo = unidecode(str(nomes_bnmp[idx_global])).strip().upper()
             
             for vizinho_idx in indices:
-                # Validação final com RapidFuzz
-                score_final = fuzz.token_sort_ratio(nome_alvo_limpo, nomes_ref_fonetico[vizinho_idx])
+                id_c = ids_civil[vizinho_idx]
+                n_c_limpo = unidecode(str(nomes_civil[vizinho_idx])).strip().upper()
                 
-                if score_final >= 80:
+                # --- CORREÇÃO: Compara nomes SEM acentuação ---
+                # Se após remover os acentos forem iguais, o script ignora.
+                if n_b_limpo == n_c_limpo:
+                    continue
+                
+                chave_par = (id_b, id_c)
+                if chave_par in pares_registrados:
+                    continue
+                
+                score_composto = fuzz.token_sort_ratio(identidades_alvo_fonetica[idx_global], identidades_ref_fonetica[vizinho_idx])
+                
+                if score_composto >= 80:
                     resultados_para_humano.append({
-                        'id_bnmp': ids_bnmp[idx_global],
-                        'nome_bnmp': nomes_bnmp_originais[idx_global],
-                        'id_ro_civil': ids_civil[vizinho_idx],
-                        'nome_ro_civil': nomes_civil_originais[vizinho_idx],
-                        'score_fonetico': round(score_final, 2)
+                        'id_bnmp': id_b,
+                        'nome_bnmp': nomes_bnmp[idx_global],
+                        'mae_bnmp': maes_bnmp[idx_global],
+                        'pai_bnmp': pais_bnmp[idx_global],
+                        'id_ro_civil': id_c,
+                        'nome_ro_civil': nomes_civil[vizinho_idx],
+                        'mae_ro_civil': maes_civil[vizinho_idx],
+                        'pai_ro_civil': pais_civil[vizinho_idx],
+                        'score_identidade': round(score_composto, 2)
                     })
+                    pares_registrados.add(chave_par)
         
-        pbar.update(fim - i) #
+        pbar.update(fim - i)
+        
+# --- LIMPEZA ANTES DE SALVAR ---
+del lote_vetores, distancias_lote, indices_lote, identidades_ref_fonetica, identidades_alvo_fonetica
+gc.collect()
 
 # --- SALVAMENTO ---
-print("\n--- Finalizando e salvando resultados ---")
 df_final = pd.DataFrame(resultados_para_humano)
-
-# Salva em arquivo CSV os resultados com score mais alto
 if not df_final.empty:
-    df_final = df_final.sort_values(by='score_fonetico', ascending=False)
-    output_path = os.path.join(DIR, 'pendentes_validacao_fonetica.csv')
+    df_final = df_final.sort_values(by='score_identidade', ascending=False)
+    output_path = os.path.join(DIR, 'pendentes_validacao_filiacao.csv')
     df_final.to_csv(output_path, index=False, encoding='utf-8-sig')
-    print(f"Sucesso! {len(df_final)} possíveis matches encontrados em: {output_path}")
+    print(f"\n✅ Sucesso! {len(df_final)} candidatos encontrados.")
 else:
-    print("Nenhum match encontrado com os critérios atuais.")
+    print("\n❌ Nenhum candidato encontrado com as novas regras.")
 
-print("--- Processo encerrado... ---")
+# Limpeza final
+del resultados_para_humano, pares_registrados, nomes_civil, maes_civil, pais_civil, ids_civil, nomes_bnmp, maes_bnmp, pais_bnmp, ids_bnmp
+del tf_idf_matrix, tf_idf_bnmp, model, vetorizacao
+gc.collect()
+print("✅ RAM liberada com sucesso.")

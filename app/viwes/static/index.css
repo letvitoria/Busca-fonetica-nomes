@@ -1,0 +1,16 @@
+.main{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: rgb(6, 42, 75);
+}
+h1{
+    color: white;
+    font-size: 2rem;
+    margin-bottom: 2rem;
+}
+body{
+    background-color: black;
+}

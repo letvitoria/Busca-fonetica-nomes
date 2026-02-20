@@ -1,0 +1,30 @@
+Fluxo de Tarefas
+
+1 - Pesquisa por similaridade fonética (nome e filiação)
+2 - Retorna tela de comparação (Com dados e foto dos candidatos)
+3 - CONDICIONAL: É a mesma pessoa? (Validado apenas por agente humano)
+4 - Salva relatório com os resultados positivos. 
+5 - FIM
+
+No momento a pesquisa fonética está certa, retorna o score correto e valida o identificador(não retorna a mesma pessoa várias vezes) Porém será necesssário uma mudança nesse fluxo.
+Antes ele verificava a similaridade somente no NOME, agora será necessário verificar também a filiação. Ou seja, mais chance de ser a mesma pessoa se houver grande similaridade entre 
+o nome dela e o nome dos pais; 
+Tratamentos necessários: Tem nome da mãe? | Tem nome de pai | O Score agora é baseado no mach entre nome completo da pessoa + nome completo da mãe + nome completo do pai, quando houver.
+Além dessa alteração também será necessário um condicional de verificação do nome da pessoa: Se o nome dos dois resultados forem exatamente iguais, exemplo: 
+id_bnmp: 123456 nome_bnmp: Lara Vicunha e id_ro_civil: 123321.456789456/2026-01 nome_ro_civil: Lara Vicunha
+Nesse caso a pesquisa fopi válida porque apenas dos nomes serem exatemente iguais são diferenciadas pelo ID. Mas não é de nosso interesse salvar esse tipo de dado. Quando os nomes (da pessoa)
+forem exatamente iguais o registro deve apenas ser ignorado e não deve ser salvo no CSV. 
+Agora os outros registros que deram score acima de 80 comparando nome + nome da mãe + nome do pai devem ser salvos no arquivo CSV. 
+Para casos de não haver o nome o pai, da mãe ou de ambos, verificar os registros existentes. Se for o caso compara só o nome ou somente o nome de filiação que tiver;
+
+O match entre o nome e o nome dos pais deu certo. No momento o script verifica a somilaridade entre os três nomes e retorna esse resultado no arquivo CSV. 
+Porém o problema já antes pontuado  persiste: Ainda está salvando nomes iguais. Se faz necessário uma verificação para casos de 'nome' ser exatamente igual tanto na base bnmp quanto na 
+base ro_civil. Exemplo: ROGER ALEXANDRE JANUARIO FIGUEREDO (nome bnmp) e ROGER ALEXANDRE JANUARIO FIGUEIREDO (nome ro_civil) para os casos de nomes onde os caracteres são exatamente os
+mesmos não há necessidade de salvar esses dados de similaridade. O programa deve apenas, quando encontrar essa condição, ignorar o dado e não salvar na planilha. 
+O objetivo desse script é justamente verificar se há nomes da mesma pessoa escrito de maneira diferente e isso se caracteriza com um caracter a mais, a menos e assim por diante. Quando 
+os caracteres são exatamente os mesmos logo é a mesma pessoa. 
+
+A verificação de nomes está retornando quase o resultado esperado. No momento está salvando nomes 'iguais' onde a única diferença é a acentuação. Na função montar_string_comparacao
+os acentos devem ser removidos para a comparação. Dessa maneira não se devem retornar os resultados atuais onde a única diferença são acentos gráficos. 
+A acentuação não indica que são nomes diferentes pois em alguns lugares não é incluso a acentuação nos nomes. Isso deve ser ignorado. Devem retornar apenas os nomes onde realmente há alguma
+mudança de string como a falta de alguma ou o acréssimo ou erros de português e etc. 
