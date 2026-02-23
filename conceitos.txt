@@ -1,0 +1,8 @@
+Fluxo de Tarefas
+
+1 - Pesquisa por similaridade fonética (nome e filiação)
+2 - Retorna tela de comparação (Com dados e foto dos candidatos)
+3 - CONDICIONAL: É a mesma pessoa? (Validado apenas por agente humano)
+4 - Salva relatório com os resultados positivos. 
+5 - FIM
+

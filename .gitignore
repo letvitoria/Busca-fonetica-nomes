@@ -2,3 +2,5 @@
 *.exe
 app/models/bases/*.db
 *.db
+app/models/pendentes_validacao_fonetica.csv
+app/models/pendentes_validacao_fonetica.xlsx

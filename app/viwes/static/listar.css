@@ -1,0 +1,133 @@
+body{
+    background-color: rgb(13, 29, 51);
+    color: white;
+    margin: 0;
+    padding: 0;
+    padding-top: 70px;
+}
+.cards-container{
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    padding: 30px 20px;
+    flex-wrap: wrap;
+}
+.pessoa-card{
+    background-color: rgb(20, 45, 75);
+    border-radius: 12px;
+    padding: 30px;
+    width: 400px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.card-imagem{
+    width: 100%;
+    margin-bottom: 25px;
+    text-align: center;
+}
+.card-imagem img{
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    border-radius: 8px;
+    object-fit: cover;
+}
+.card-informacoes{
+    width: 100%;
+}
+.card-informacoes h2{
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 1.5rem;
+    color: #ffffff;
+}
+.info-item{
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.info-item:last-child{
+    border-bottom: none;
+}
+.info-item strong{
+    color: #b0c4de;
+}
+.info-item span{
+    color: #ffffff;
+    text-align: right;
+}
+.nav-bar{
+    display: flex;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-color:rgb(4, 53, 99);
+    position: fixed;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+    z-index: 1000;
+}
+li{
+    list-style-type: none;
+    margin: 0;
+    padding: 10px 20px;
+    background-color:rgb(4, 53, 99);
+}
+a{
+    color: white;
+    text-decoration: none;
+}
+.desicao{
+    text-align: center;
+    padding: 40px 20px;
+    background-color: rgb(13, 29, 51);
+}
+.desicao h3{
+    margin-top: 0;
+    margin-bottom: 30px;
+    font-size: 1.3rem;
+    color: #ffffff;
+}
+.botoes-container{
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+.btn-sim, .btn-nao{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 25px;
+    font-size: 1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white;
+}
+.btn-sim{
+    background-color: rgb(34, 139, 34);
+}
+.btn-sim:hover{
+    background-color: rgb(46, 180, 46);
+    transform: scale(1.05);
+}
+.btn-nao{
+    background-color: rgb(178, 34, 34);
+}
+.btn-nao:hover{
+    background-color: rgb(220, 50, 50);
+    transform: scale(1.05);
+}
+.btn-sim img, .btn-nao img{
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
