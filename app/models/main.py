@@ -9,7 +9,7 @@ from unidecode import unidecode
 from tqdm import tqdm
 import gc #Limpar a RAM
 
-# Suprimir avisos do sklearn
+#Ignorar no log avisos do sklearn
 warnings.filterwarnings('ignore', category=UserWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
 warnings.filterwarnings('ignore', category=UserWarning, module=r"sklearn\.utils\.parallel")
@@ -137,12 +137,12 @@ with tqdm(total=len(ids_bnmp), desc="Processando: ") as pbar:
                     pares_registrados.add(chave_par)
         
         pbar.update(fim - i)
-        
-# --- LIMPEZA ANTES DE SALVAR ---
+
+# LIMPEZA ANTES DE SALVAR 
 del lote_vetores, distancias_lote, indices_lote, identidades_ref_fonetica, identidades_alvo_fonetica
 gc.collect()
 
-# --- SALVAMENTO ---
+# SALVAMENTO 
 df_final = pd.DataFrame(resultados_para_humano)
 if not df_final.empty:
     df_final = df_final.sort_values(by='score_identidade', ascending=False)
@@ -155,5 +155,6 @@ else:
 # Limpeza final
 del resultados_para_humano, pares_registrados, nomes_civil, maes_civil, pais_civil, ids_civil, nomes_bnmp, maes_bnmp, pais_bnmp, ids_bnmp
 del tf_idf_matrix, tf_idf_bnmp, model, vetorizacao
+
 gc.collect()
 print("✅ RAM liberada com sucesso.")
