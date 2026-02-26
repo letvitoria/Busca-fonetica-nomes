@@ -43,11 +43,11 @@ def executar_busca():
     # --- CARREGAMENTO DOS DADOS ---
     print("--- Carregando Banco de Dados --- 🔎")
     conn_civilro = sqlite3.connect(PATH_RO)
-    df_civil = pd.read_sql_query("SELECT DISTINCT nif, nome, nome_mae, nome_pai FROM pessoas", conn_civilro)
+    df_civil = pd.read_sql_query("SELECT DISTINCT nif, nome, nome_mae, nome_pai, cpf, rg FROM pessoas", conn_civilro) #Adicionado dados faltantes
     conn_civilro.close()
 
     conn_bnmp = sqlite3.connect(PATH_BNMP)
-    df_bnmp = pd.read_sql_query("SELECT DISTINCT id, Nome, Filiacao1, Filiacao2 FROM dados_csv", conn_bnmp) 
+    df_bnmp = pd.read_sql_query("SELECT DISTINCT id, Nome, Filiacao1, Filiacao2,  FROM dados_csv", conn_bnmp) 
     conn_bnmp.close()
 
     #Listas para acelerrar processamento
