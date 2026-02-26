@@ -48,6 +48,35 @@
         <h3>Score de Similaridade:</h3>
         <p>%</p>
         <!--Adicionar script de acordo com o Score de similaridade-->
+    </div>
+    <div class="manipular-dados">
+        <!--Lógica para a manipulação dos dados from CSV-->
+        
+<script>
+    document.getElementById('csvInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+        const text = e.target.result;
+        const rows = text.split('\n');
+        const table = document.getElementById('tableData');
+        table.innerHTML = ''; // Limpa a tabela
+
+        rows.forEach(row => {
+            const columns = row.split(','); // Delimitador CSV
+            const tr = document.createElement('tr');
+            columns.forEach(col => {
+            const td = document.createElement('td');
+            td.textContent = col;
+            tr.appendChild(td);
+            });
+            table.appendChild(tr);
+        });
+        };
+        reader.readAsText(file);
+    });
+</script>
     </div> 
 
         <div class="pessoa-card"> 
