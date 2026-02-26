@@ -4,3 +4,6 @@ app/models/bases/*.db
 *.db
 app/models/pendentes_validacao_fonetica.csv
 app/models/pendentes_validacao_fonetica.xlsx
+.venv/
+__pycache__/
+*.pyc

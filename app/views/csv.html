@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/listar.css') }}">
+    <title>CSV - Dados</title>
+</head>
+<body>
+    <div class="nav-bar">
+        <a href="{{ url_for('home.index') }}">Início</a>
+        <a href="{{ url_for('home.listar') }}">Listar</a>
+        <a href="{{ url_for('home.relatorio')}}">Relatório</a>
+        <a href="{{ url_for('home.csv')}}">CSV</a>
+    </div> 
+    
+    <div class="csv-doc">
+        <h1>Dados do CSV</h1>
+        <div id="loading" class="loading">Carregando dados...</div>
+        <table id="csv-table"></table>
+    </div>
+
+    <script>
+        // Busca dados do CSV via API
+        fetch('{{ url_for("home.csv_data") }}')
+            .then(response => {
+                if (!response.ok) throw new Error('Erro ao buscar dados');
+                return response.json();
+            })
+            .then(data => {
+                const loadingDiv = document.getElementById('loading');
+                loadingDiv.remove();
+                
+                if (!data || data.length === 0) {
+                    document.getElementById('csv-table').innerHTML = 
+                        '<tr><td class="error">Nenhum dado disponível</td></tr>';
+                    return;
+                }
+                
+                const table = document.getElementById('csv-table');
+                
+                // Criar cabeçalho
+                const thead = table.createTHead();
+                const headerRow = thead.insertRow();
+                const headers = Object.keys(data[0]);
+                
+                headers.forEach(header => {
+                    const th = document.createElement('th');
+                    th.textContent = header;
+                    headerRow.appendChild(th);
+                });
+                
+                // Criar linhas
+                const tbody = table.createTBody();
+                data.forEach(row => {
+                    const tr = tbody.insertRow();
+                    headers.forEach(header => {
+                        const td = tr.insertCell();
+                        td.textContent = row[header] || '';
+                    });
+                });
+            })
+            .catch(error => {
+                document.getElementById('loading').innerHTML = 
+                    `<div class="error">Erro ao carregar dados: ${error.message}</div>`;
+                console.error('Erro:', error);
+            });
+    </script>
+
+</body>
+</html>

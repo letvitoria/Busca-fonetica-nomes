@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="PT-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+    
+    <title>Index</title>
+</head>
+<body>
+    <!--Adicionar as rotas de páginas-->
+    <div class="nav-bar">
+        <a href="{{ url_for('home.index') }}">Início</a>
+        <a href="{{ url_for('home.listar') }}">Listar</a>
+        <a href="{{ url_for('home.relatorio')}}">Relatório</a>
+        <a href="{{ url_for('home.csv')}}">CSV</a>
+    </div>    
+
+    <div class="main">
+        <h1> Validação de similaridade fonética</h1>
+        <div class="botton">
+           <a href="{{ url_for('home.index') }}">Início</a>
+        </div>
+    </div>
+
+</body>
+</html>
