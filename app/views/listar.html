@@ -3,22 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../viwes/static/listar.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/listar.css') }}">
     <title>Listar</title>
 </head>
 <body>
     <div class="nav-bar">
-        <li><a href="../viwes/index.html">Início</a></li>
-        <li><a href="../viwes/listar.html">Comparar</a></li>
-        <li><a href="../viwes/listar.html">Relatório</a></li>
-        <li><a href="../viwes/listar.html">CSV</a></li>
-        <!--<a href="{{ url_for('nome.listar')}}">CSV</a>-->
+        <a href="{{ url_for('home.index') }}">Início</a>
+        <a href="{{ url_for('home.listar') }}">Listar</a>
+        <a href="{{ url_for('home.relatorio')}}">Relatório</a>
+        <a href="{{ url_for('home.csv')}}">CSV</a>
     </div> 
 
     <div class="cards-container">
         <div class="pessoa-card">
             <div class="card-imagem">
-                <img src="../viwes/img/sem-foto.jpg" alt="Imagem - pessoa">
+                <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
             </div>
             <div class="card-informacoes">
                 <h2>Nome Completo</h2>
@@ -53,7 +52,7 @@
 
         <div class="pessoa-card"> 
             <div class="card-imagem">
-                <img src="../viwes/img/sem-foto.jpg" alt="Imagem - pessoa">
+                <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
             </div>
             <div class="card-informacoes">
                 <h2>Nome Completo</h2>
@@ -81,8 +80,8 @@
     <div class="desicao">
         <h3> É a mesma pessoa? </h3>
         <div class="botoes-container">
-            <button class="btn-sim"><img src="../viwes/img/Aceitar-icon.png" alt="Aceitar-Ícone">SIM</button>
-            <button class="btn-nao"><img src="../viwes/img/Negar-icon.png" alt="Negar-Ícone">NÃO</button>
+            <button class="btn-sim"><img src="{{ url_for('static', filename='img/Aceitar-icon.png') }}" alt="Aceitar-Ícone">SIM</button>
+            <button class="btn-nao"><img src="{{ url_for('static', filename='img/Negar-icon.png') }}" alt="Negar-Ícone">NÃO</button>
         </div>
     </div>
 
