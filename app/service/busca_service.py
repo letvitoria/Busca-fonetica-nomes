@@ -21,7 +21,7 @@ def executar_busca():
     PATH_BNMP = os.path.join(BASE_DIR, "models", "bases", "bnmp.db")
 
     def preparacao_fonetica(texto):
-        if not texto or str(texto).lower() in ['nan', 'None', '']: return ""
+        if not texto or str(texto).lower() in ['NULL', 'None', '']: return ""
         texto = unidecode(str(texto)).upper().strip() #Remove acentuação
         substituicoes = {
             "PH": "F", "SH": "X", "CH": "X", "Y": "I", "K": "C", 
@@ -35,18 +35,18 @@ def executar_busca():
     def montar_string_comparacao(nome, mae, pai):
         """Concatena os nomes disponíveis para criar uma identidade única."""
         partes = [str(nome)]
-        if mae and str(mae).lower() not in ['none', '']: partes.append(str(mae))
-        if pai and str(pai).lower() not in ['none', '']: partes.append(str(pai))
+        if mae and str(mae).lower() not in ['NULL','none', '']: partes.append(str(mae))
+        if pai and str(pai).lower() not in ['NULL','none', '']: partes.append(str(pai))
         return " ".join(partes)
 
     # --- CARREGAMENTO DOS DADOS ---
     print("--- Carregando Banco de Dados --- 🔎")
     conn_civilro = sqlite3.connect(PATH_RO)
-    df_civil = pd.read_sql_query("SELECT DISTINCT nif, nome, nome_mae, nome_pai, cpf, rg FROM pessoas", conn_civilro) #Adicionado dados faltantes
+    df_civil = pd.read_sql_query("SELECT DISTINCT nif, nome, nome_mae, nome_pai, cpf, rg FROM pessoas", conn_civilro) # Adicionado dados faltantes
     conn_civilro.close()
 
     conn_bnmp = sqlite3.connect(PATH_BNMP)
-    df_bnmp = pd.read_sql_query("SELECT DISTINCT id, Nome, Filiacao1, Filiacao2,  FROM dados_csv", conn_bnmp) 
+    df_bnmp = pd.read_sql_query("SELECT DISTINCT id, Nome, Filiacao1, Filiacao2, BNMP  FROM dados_csv", conn_bnmp) 
     conn_bnmp.close()
 
     #Listas para acelerrar processamento

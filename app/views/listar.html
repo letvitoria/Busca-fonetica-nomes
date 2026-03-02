@@ -11,76 +11,133 @@
         <a href="{{ url_for('home.index') }}">Início</a>
         <a href="{{ url_for('home.csv_data') }}">Listar</a>
         <a href="{{ url_for('home.relatorio') }}">Relatório</a>
-        <a href="{{ url_for('home.csv') }}">CSV</a>
     </div> 
+
+    <div class="navegacao-container">
+        <button class="btn-navegacao" id="btn-anterior" onclick="navegarComparacao(-1)">← Anterior</button>
+        <div class="contador">
+            <span id="comparacao-atual">1</span> de <span id="total-comparacoes">{{ pessoas|length }}</span>
+        </div>
+        <button class="btn-navegacao" id="btn-proximo" onclick="navegarComparacao(1)">Próximo →</button>
+    </div>
 
     <div class="cards-container">
         {% for pessoa in pessoas %}
-        <div class="pessoa-card">
-            <div class="card-imagem">
-                <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
+        <div class="comparacao-item {% if loop.first %}ativa{% endif %}" data-index="{{ loop.index0 }}">
+            <div class="pessoa-card">
+                <div class="card-imagem">
+                    <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
+                </div>
+                <div class="card-informacoes">
+                    <h2>{{ pessoa['nome_bnmp'] }}</h2>
+                    <div class="info-item">
+                        <strong>Nome:</strong> <span>{{ pessoa['nome_bnmp'] }}</span>
+                    </div>
+                    <div class="info-item">
+                        <strong>Nome do pai:</strong> <span>{{ pessoa['pai_bnmp'] if pessoa['pai_bnmp'] is not none else 'NÃO INFORMADO' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <strong>Nome da mãe:</strong> <span>{{ pessoa['mae_bnmp'] }}</span>
+                    </div>
+                    <div class="info-item">
+                        <strong>ID BNMP:</strong> <span>{{ pessoa['id_bnmp'] }}</span>
+                    </div>
+                    <div class="vacuo">
+                        <strong>ORIGEM:</strong><span>BNMP</span>
+                    </div>
+                </div>
             </div>
-            <div class="card-informacoes">
-                <h2>{{ pessoa['nome_bnmp'] }}</h2>
-                <div class="info-item">
-                    <strong>Nome:</strong> <span>{{ pessoa['nome_bnmp'] }}</span>
+
+            <div class="score-similaridade">
+                <h3>Score de Similaridade:</h3>
+                <p>{{ pessoa['score_identidade'] }}%</p>
+            </div>
+
+            <div class="pessoa-card"> 
+                <div class="card-imagem">
+                    <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
                 </div>
-                <div class="info-item">
-                    <strong>Nome do pai:</strong> <span>{{ pessoa['pai_bnmp'] if pessoa['pai_bnmp'] is not none else 'NÃO INFORMADO' }}</span>
+                <div class="card-informacoes">
+                    <h2>{{ pessoa['nome_ro_civil'] }}</h2>
+                    <div class="info-item">
+                        <strong>Nome:</strong> <span>{{ pessoa['nome_ro_civil'] }}</span>
+                    </div>
+                    <div class="info-item">
+                        <strong>Nome do pai:</strong> <span>{{ pessoa['pai_ro_civil'] if pessoa['pai_ro_civil'] is not none else 'NÃO INFORMADO' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <strong>Nome da mãe:</strong> <span>{{ pessoa['mae_ro_civil'] }}</span>
+                    </div>
+                    <div class="info-item">
+                        <strong>Processo:</strong> <span>{{ pessoa['id_ro_civil'] }}</span>
+                    </div>
                 </div>
-                <div class="info-item">
-                    <strong>Nome da mãe:</strong> <span>{{ pessoa['mae_bnmp'] }}</span>
-                </div>
-                <div class="info-item">
-                    <strong>ID BNMP:</strong> <span>{{ pessoa['id_bnmp'] }}</span>
-                </div>
-                <div class="vacuo">
-                    <strong>ORIGEM:</strong><span>BNMP</span>
+            </div>
+
+            <div class="desicao">
+                <h3> É a mesma pessoa? </h3>
+                <div class="botoes-container">
+                    <button class="btn-sim">
+                        <img src="{{ url_for('static', filename='img/Aceitar-icon.png') }}" alt="Aceitar">SIM
+                    </button>
+                    <button class="btn-nao">
+                        <img src="{{ url_for('static', filename='img/Negar-icon.png') }}" alt="Negar">NÃO
+                    </button>
                 </div>
             </div>
         </div>
-
-        <div class="score-similaridade">
-            <h3>Score de Similaridade:</h3>
-            <p>{{ pessoa['score_identidade'] }}%</p>
-        </div>
-
-        <div class="pessoa-card"> 
-            <div class="card-imagem">
-                <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
-            </div>
-            <div class="card-informacoes">
-                <h2>{{ pessoa['nome_ro_civil'] }}</h2>
-                <div class="info-item">
-                    <strong>Nome:</strong> <span>{{ pessoa['nome_ro_civil'] }}</span>
-                </div>
-                <div class="info-item">
-                    <strong>Nome do pai:</strong> <span>{{ pessoa['pai_ro_civil'] if pessoa['pai_ro_civil'] is not none else 'NÃO INFORMADO' }}</span>
-                </div>
-                <div class="info-item">
-                    <strong>Nome da mãe:</strong> <span>{{ pessoa['mae_ro_civil'] }}</span>
-                </div>
-                <div class="info-item">
-                    <strong>Processo:</strong> <span>{{ pessoa['id_ro_civil'] }}</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="desicao">
-            <h3> É a mesma pessoa? </h3>
-            <div class="botoes-container">
-                <button class="btn-sim">
-                    <img src="{{ url_for('static', filename='img/Aceitar-icon.png') }}" alt="Aceitar">SIM
-                </button>
-                <button class="btn-nao">
-                    <img src="{{ url_for('static', filename='img/Negar-icon.png') }}" alt="Negar">NÃO
-                </button>
-            </div>
-        </div>
-
-        <hr style="width: 100%; border: 0.5px solid rgba(255,255,255,0.1); margin: 40px 0;">
-        
         {% endfor %}
     </div>
+
+    <script>
+        let comparacaoAtual = 0;
+        const totalComparacoes = "{{ pessoas | length }}";
+
+        function atualizarVisualizacao() {
+            // Esconde todas as comparações
+            document.querySelectorAll('.comparacao-item').forEach(item => {
+                item.classList.remove('ativa');
+            });
+
+            // Mostra a comparação atual
+            const comparacaoAtiva = document.querySelector(`.comparacao-item[data-index="${comparacaoAtual}"]`);
+            if (comparacaoAtiva) {
+                comparacaoAtiva.classList.add('ativa');
+            }
+
+            // Atualiza o contador
+            document.getElementById('comparacao-atual').textContent = comparacaoAtual + 1;
+
+            // Atualiza estado dos botões
+            document.getElementById('btn-anterior').disabled = comparacaoAtual === 0;
+            document.getElementById('btn-proximo').disabled = comparacaoAtual === totalComparacoes - 1;
+        }
+
+        function navegarComparacao(direcao) {
+            const novoIndice = comparacaoAtual + direcao;
+            
+            if (novoIndice >= 0 && novoIndice < totalComparacoes) {
+                comparacaoAtual = novoIndice;
+                atualizarVisualizacao();
+                
+                // Scroll suave para o topo
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        // Inicializa a visualização
+        document.addEventListener('DOMContentLoaded', function() {
+            atualizarVisualizacao();
+        });
+
+        // Navegação por teclado (setas)
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                navegarComparacao(-1);
+            } else if (e.key === 'ArrowRight') {
+                navegarComparacao(1);
+            }
+        });
+    </script>
 </body>
 </html>

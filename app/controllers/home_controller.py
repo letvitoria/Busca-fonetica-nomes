@@ -9,10 +9,6 @@ class HomeController:
             dados = ler_csv() # Busca os dados do CSV
             return render_template("listar.html", pessoas=dados)
     
-    def csv(self):
-        dados = ler_csv() # Busca os dados do CSV
-        return render_template("csv.html", dados=dados)
-    
     def csv_data(self):
             """Agora retorna a página formatada com os dados do CSV"""
             dados = ler_csv()
