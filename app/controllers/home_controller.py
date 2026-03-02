@@ -6,15 +6,18 @@ class HomeController:
         return render_template("index.html")
 
     def listar(self):
-        return render_template("listar.html")
+            dados = ler_csv() # Busca os dados do CSV
+            return render_template("listar.html", pessoas=dados)
     
     def csv(self):
-        return render_template("csv.html")
+        dados = ler_csv() # Busca os dados do CSV
+        return render_template("csv.html", dados=dados)
     
     def csv_data(self):
-        """Endpoint que retorna dados do CSV em JSON"""
-        dados = ler_csv()
-        return jsonify(dados)
+            """Agora retorna a página formatada com os dados do CSV"""
+            dados = ler_csv()
+            # Enviamos os dados para o listar.html sob a variável 'pessoas'
+            return render_template("listar.html", pessoas=dados)
     
     def relatorio(self):
         return render_template("relatorio.html")

@@ -1,4 +1,3 @@
-# Depois: Remover os 'prints'
 def executar_busca():
     import sqlite3
     import os
@@ -36,8 +35,8 @@ def executar_busca():
     def montar_string_comparacao(nome, mae, pai):
         """Concatena os nomes disponíveis para criar uma identidade única."""
         partes = [str(nome)]
-        if mae and str(mae).lower() not in ['nan', 'none', '']: partes.append(str(mae))
-        if pai and str(pai).lower() not in ['nan', 'none', '']: partes.append(str(pai))
+        if mae and str(mae).lower() not in ['none', '']: partes.append(str(mae))
+        if pai and str(pai).lower() not in ['none', '']: partes.append(str(pai))
         return " ".join(partes)
 
     # --- CARREGAMENTO DOS DADOS ---

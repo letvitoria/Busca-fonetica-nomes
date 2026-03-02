@@ -14,59 +14,83 @@
         <a href="{{ url_for('home.csv')}}">CSV</a>
     </div> 
     
-    <div class="csv-doc">
-        <h1>Dados do CSV</h1>
-        <div id="loading" class="loading">Carregando dados...</div>
-        <table id="csv-table"></table>
+    <div class="cards-container">
+        {% if dados and dados|length > 0 %}
+            {% for pessoa in dados %}
+                <!-- Card da pessoa do BNMP -->
+                <div class="pessoa-card">
+                    <div class="card-imagem">
+                        <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
+                    </div>
+                    <div class="card-informacoes">
+                        <h2>Nome Completo</h2>
+                        <div class="info-item">
+                            <strong>Nome:</strong> <span>{{ pessoa.get('nome_bnmp', 'N/A') }}</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Nome do pai:</strong> <span>{{ pessoa.get('pai_bnmp', 'N/A') }}</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Nome da mãe:</strong> <span>{{ pessoa.get('mae_bnmp', 'N/A') }}</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>RG:</strong> <span>{{ pessoa.get('id_bnmp', 'N/A') }}</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>CPF:</strong> <span>-</span>
+                        </div>
+                        <div class="vacuo">
+                            <strong>BNMP:</strong><span>SIM</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Score de Similaridade -->
+                <div class="score-similaridade">
+                    <h3>Score de Similaridade:</h3>
+                    <p>{{ pessoa.get('score_identidade', 0) }}%</p>
+                </div>
+
+                <!-- Card da pessoa do RO Civil -->
+                <div class="pessoa-card">
+                    <div class="card-imagem">
+                        <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
+                    </div>
+                    <div class="card-informacoes">
+                        <h2>Nome Completo</h2>
+                        <div class="info-item">
+                            <strong>Nome:</strong> <span>{{ pessoa.get('nome_ro_civil', 'N/A') }}</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Nome do pai:</strong> <span>{{ pessoa.get('pai_ro_civil', 'N/A') }}</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Nome da mãe:</strong> <span>{{ pessoa.get('mae_ro_civil', 'N/A') }}</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>RG:</strong> <span>{{ pessoa.get('id_ro_civil', 'N/A') }}</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>CPF:</strong> <span>-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botões de decisão -->
+                <div class="desicao">
+                    <h3>É a mesma pessoa?</h3>
+                    <div class="botoes-container">
+                        <button class="btn-sim">✓ SIM</button>
+                        <button class="btn-nao">✗ NÃO</button>
+                    </div>
+                </div>
+
+                <!-- Separador entre cards -->
+                {% if not loop.last %}
+                    <hr style="width: 100%; border: 0.5px solid rgba(255,255,255,0.1); margin: 40px 0;">
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <div style="color: white; text-align: center; width: 100%; padding: 50px;">Nenhum dado disponível</div>
+        {% endif %}
     </div>
-
-    <script>
-        // Busca dados do CSV via API
-        fetch('{{ url_for("home.csv_data") }}')
-            .then(response => {
-                if (!response.ok) throw new Error('Erro ao buscar dados');
-                return response.json();
-            })
-            .then(data => {
-                const loadingDiv = document.getElementById('loading');
-                loadingDiv.remove();
-                
-                if (!data || data.length === 0) {
-                    document.getElementById('csv-table').innerHTML = 
-                        '<tr><td class="error">Nenhum dado disponível</td></tr>';
-                    return;
-                }
-                
-                const table = document.getElementById('csv-table');
-                
-                // Criar cabeçalho
-                const thead = table.createTHead();
-                const headerRow = thead.insertRow();
-                const headers = Object.keys(data[0]);
-                
-                headers.forEach(header => {
-                    const th = document.createElement('th');
-                    th.textContent = header;
-                    headerRow.appendChild(th);
-                });
-                
-                // Criar linhas
-                const tbody = table.createTBody();
-                data.forEach(row => {
-                    const tr = tbody.insertRow();
-                    headers.forEach(header => {
-                        const td = tr.insertCell();
-                        td.textContent = row[header] || '';
-                    });
-                });
-            })
-            .catch(error => {
-                document.getElementById('loading').innerHTML = 
-                    `<div class="error">Erro ao carregar dados: ${error.message}</div>`;
-                console.error('Erro:', error);
-            });
-    </script>
-    
-
-</body>
-</html>

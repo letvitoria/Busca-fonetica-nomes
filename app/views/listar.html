@@ -4,115 +4,83 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/listar.css') }}">
-    <title>Listar</title>
+    <title>Listar - Validação Fonética</title>
 </head>
 <body>
     <div class="nav-bar">
         <a href="{{ url_for('home.index') }}">Início</a>
-        <a href="{{ url_for('home.listar') }}">Listar</a>
-        <a href="{{ url_for('home.relatorio')}}">Relatório</a>
-        <a href="{{ url_for('home.csv')}}">CSV</a>
+        <a href="{{ url_for('home.csv_data') }}">Listar</a>
+        <a href="{{ url_for('home.relatorio') }}">Relatório</a>
+        <a href="{{ url_for('home.csv') }}">CSV</a>
     </div> 
 
     <div class="cards-container">
+        {% for pessoa in pessoas %}
         <div class="pessoa-card">
             <div class="card-imagem">
                 <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
             </div>
             <div class="card-informacoes">
-                <h2>Nome Completo</h2>
+                <h2>{{ pessoa['nome_bnmp'] }}</h2>
                 <div class="info-item">
-                    <strong>Nome:</strong> <span></span>
+                    <strong>Nome:</strong> <span>{{ pessoa['nome_bnmp'] }}</span>
                 </div>
                 <div class="info-item">
-                    <strong>Nome do pai:</strong> <span></span>
+                    <strong>Nome do pai:</strong> <span>{{ pessoa['pai_bnmp'] if pessoa['pai_bnmp'] is not none else 'NÃO INFORMADO' }}</span>
                 </div>
                 <div class="info-item">
-                    <strong>Nome da mãe:</strong> <span></span>
+                    <strong>Nome da mãe:</strong> <span>{{ pessoa['mae_bnmp'] }}</span>
                 </div>
                 <div class="info-item">
-                    <strong>Data de nascimento:</strong> <span></span>
-                </div>
-                <div class="info-item">
-                    <strong>RG:</strong> <span></span>
-                </div>
-                <div class="info-item">
-                    <strong>CPF:</strong> <span></span>
+                    <strong>ID BNMP:</strong> <span>{{ pessoa['id_bnmp'] }}</span>
                 </div>
                 <div class="vacuo">
-                    <strong>BNMP:</strong><span></span>
+                    <strong>ORIGEM:</strong><span>BNMP</span>
                 </div>
             </div>
         </div>
-    <div class="score-similaridade">
-        <h3>Score de Similaridade:</h3>
-        <p>%</p>
-        <!--Adicionar script de acordo com o Score de similaridade-->
-    </div>
-    <div class="manipular-dados">
-        <!--Lógica para a manipulação dos dados from CSV-->
-        
-<script>
-    document.getElementById('csvInput').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        const reader = new FileReader();
 
-        reader.onload = function(e) {
-        const text = e.target.result;
-        const rows = text.split('\n');
-        const table = document.getElementById('tableData');
-        table.innerHTML = ''; // Limpa a tabela
-
-        rows.forEach(row => {
-            const columns = row.split(','); // Delimitador CSV
-            const tr = document.createElement('tr');
-            columns.forEach(col => {
-            const td = document.createElement('td');
-            td.textContent = col;
-            tr.appendChild(td);
-            });
-            table.appendChild(tr);
-        });
-        };
-        reader.readAsText(file);
-    });
-</script>
-    </div> 
+        <div class="score-similaridade">
+            <h3>Score de Similaridade:</h3>
+            <p>{{ pessoa['score_identidade'] }}%</p>
+        </div>
 
         <div class="pessoa-card"> 
             <div class="card-imagem">
                 <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
             </div>
             <div class="card-informacoes">
-                <h2>Nome Completo</h2>
+                <h2>{{ pessoa['nome_ro_civil'] }}</h2>
                 <div class="info-item">
-                    <strong>Nome:</strong> <span></span>
+                    <strong>Nome:</strong> <span>{{ pessoa['nome_ro_civil'] }}</span>
                 </div>
                 <div class="info-item">
-                    <strong>Nome do pai:</strong> <span></span>
+                    <strong>Nome do pai:</strong> <span>{{ pessoa['pai_ro_civil'] if pessoa['pai_ro_civil'] is not none else 'NÃO INFORMADO' }}</span>
                 </div>
                 <div class="info-item">
-                    <strong>Nome da mãe:</strong> <span></span>
+                    <strong>Nome da mãe:</strong> <span>{{ pessoa['mae_ro_civil'] }}</span>
                 </div>
                 <div class="info-item">
-                    <strong>Data de nascimento:</strong> <span></span>
-                </div>
-                <div class="info-item">
-                    <strong>RG:</strong> <span></span>
-                </div>
-                <div class="info-item">
-                    <strong>CPF:</strong> <span></span>
+                    <strong>Processo:</strong> <span>{{ pessoa['id_ro_civil'] }}</span>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="desicao">
-        <h3> É a mesma pessoa? </h3>
-        <div class="botoes-container">
-            <button class="btn-sim"><img src="{{ url_for('static', filename='img/Aceitar-icon.png') }}" alt="Aceitar-Ícone">SIM</button>
-            <button class="btn-nao"><img src="{{ url_for('static', filename='img/Negar-icon.png') }}" alt="Negar-Ícone">NÃO</button>
-        </div>
-    </div>
 
+        <div class="desicao">
+            <h3> É a mesma pessoa? </h3>
+            <div class="botoes-container">
+                <button class="btn-sim">
+                    <img src="{{ url_for('static', filename='img/Aceitar-icon.png') }}" alt="Aceitar">SIM
+                </button>
+                <button class="btn-nao">
+                    <img src="{{ url_for('static', filename='img/Negar-icon.png') }}" alt="Negar">NÃO
+                </button>
+            </div>
+        </div>
+
+        <hr style="width: 100%; border: 0.5px solid rgba(255,255,255,0.1); margin: 40px 0;">
+        
+        {% endfor %}
+    </div>
 </body>
 </html>
