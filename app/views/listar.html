@@ -8,22 +8,19 @@
 </head>
 <body>
     <div class="nav-bar">
-        <a href="{{ url_for('home.index') }}">Início</a>
         <a href="{{ url_for('home.csv_data') }}">Listar</a>
         <a href="{{ url_for('home.relatorio') }}">Relatório</a>
     </div> 
 
     <div class="navegacao-container">
-        <button class="btn-navegacao" id="btn-anterior" onclick="navegarComparacao(-1)">← Anterior</button>
         <div class="contador">
-            <span id="comparacao-atual">1</span> de <span id="total-comparacoes">{{ pessoas|length }}</span>
+            <strong>Comparação Atual:</strong> 1 de <span id="total-comparacoes">{{ restante }}</span> restantes
         </div>
-        <button class="btn-navegacao" id="btn-proximo" onclick="navegarComparacao(1)">Próximo →</button>
     </div>
 
     <div class="cards-container">
-        {% for pessoa in pessoas %}
-        <div class="comparacao-item {% if loop.first %}ativa{% endif %}" data-index="{{ loop.index0 }}">
+        <div class="comparacao-item ativa">
+            
             <div class="pessoa-card">
                 <div class="card-imagem">
                     <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
@@ -42,7 +39,10 @@
                     <div class="info-item">
                         <strong>ID BNMP:</strong> <span>{{ pessoa['id_bnmp'] }}</span>
                     </div>
-                    <div class="vacuo">
+                    <div class="info-item">
+                        <strong>BNMP:</strong> <span>{{ pessoa['bnmp_campo'] if pessoa['bnmp_campo'] is not none else 'NÃO INFORMADO' }}</span>
+                    </div>
+                    <div class="info-item">
                         <strong>ORIGEM:</strong><span>BNMP</span>
                     </div>
                 </div>
@@ -71,71 +71,42 @@
                     <div class="info-item">
                         <strong>Processo:</strong> <span>{{ pessoa['id_ro_civil'] }}</span>
                     </div>
+                    <div class="info-item">
+                        <strong>CPF:</strong> <span>{{ pessoa['cpf_ro_civil'] if pessoa['cpf_ro_civil'] is not none else 'NÃO INFORMADO' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <strong>RG:</strong> <span>{{ pessoa['rg_ro_civil'] if pessoa['rg_ro_civil'] is not none else 'NÃO INFORMADO' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <strong>ORIGEM:</strong><span>Base Civil - RO</span>
+                    </div>
                 </div>
             </div>
 
             <div class="desicao">
                 <h3> É a mesma pessoa? </h3>
-                <div class="botoes-container">
-                    <button class="btn-sim">
+                <form action="{{ url_for('home.decidir') }}" method="POST" class="botoes-container">
+                    <button type="submit" name="decisao" value="sim" class="btn-sim">
                         <img src="{{ url_for('static', filename='img/Aceitar-icon.png') }}" alt="Aceitar">SIM
                     </button>
-                    <button class="btn-nao">
+                    <button type="submit" name="decisao" value="nao" class="btn-nao">
                         <img src="{{ url_for('static', filename='img/Negar-icon.png') }}" alt="Negar">NÃO
                     </button>
-                </div>
+                </form>
             </div>
         </div>
-        {% endfor %}
     </div>
 
     <script>
-        let comparacaoAtual = 0;
-        const totalComparacoes = "{{ pessoas | length }}";
-
-        function atualizarVisualizacao() {
-            // Esconde todas as comparações
-            document.querySelectorAll('.comparacao-item').forEach(item => {
-                item.classList.remove('ativa');
-            });
-
-            // Mostra a comparação atual
-            const comparacaoAtiva = document.querySelector(`.comparacao-item[data-index="${comparacaoAtual}"]`);
-            if (comparacaoAtiva) {
-                comparacaoAtiva.classList.add('ativa');
-            }
-
-            // Atualiza o contador
-            document.getElementById('comparacao-atual').textContent = comparacaoAtual + 1;
-
-            // Atualiza estado dos botões
-            document.getElementById('btn-anterior').disabled = comparacaoAtual === 0;
-            document.getElementById('btn-proximo').disabled = comparacaoAtual === totalComparacoes - 1;
-        }
-
-        function navegarComparacao(direcao) {
-            const novoIndice = comparacaoAtual + direcao;
-            
-            if (novoIndice >= 0 && novoIndice < totalComparacoes) {
-                comparacaoAtual = novoIndice;
-                atualizarVisualizacao();
-                
-                // Scroll suave para o topo
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        }
-
-        // Inicializa a visualização
-        document.addEventListener('DOMContentLoaded', function() {
-            atualizarVisualizacao();
-        });
-
-        // Navegação por teclado (setas)
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'ArrowLeft') {
-                navegarComparacao(-1);
-            } else if (e.key === 'ArrowRight') {
-                navegarComparacao(1);
+            if (e.key === 'ArrowRight' || e.key === 's' || e.key === 'S') {
+                // Atalho para SIM
+                const btnSim = document.querySelector('.btn-sim');
+                if(btnSim) btnSim.click();
+            } else if (e.key === 'ArrowLeft' || e.key === 'n' || e.key === 'N') {
+                // Atalho para NÃO
+                const btnNao = document.querySelector('.btn-nao');
+                if(btnNao) btnNao.click();
             }
         });
     </script>
