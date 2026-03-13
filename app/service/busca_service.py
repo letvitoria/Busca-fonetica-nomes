@@ -178,7 +178,8 @@ def executar_busca():
     gc.collect()
 
     # SALVAMENTO 
-    output_path = os.path.join(BASE_DIR, 'pendentes_validacao_filiacao.csv')
+    output_path = os.path.join(BASE_DIR, 'models', 'pendentes_validacao_filiacao.csv')
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
     df_final = pd.DataFrame(resultados_para_humano)
     if not df_final.empty:
         df_final = df_final.sort_values(by='score_identidade', ascending=False)
