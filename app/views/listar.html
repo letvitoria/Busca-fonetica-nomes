@@ -19,33 +19,27 @@
     </div>
 
     <div class="cards-container">
+        {% if pessoa %}
         <div class="comparacao-item ativa">
             
             <div class="pessoa-card">
-                <div class="card-imagem">
-                    <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
-                </div>
-                <div class="card-informacoes">
-                    <h2>{{ pessoa['nome_bnmp'] }}</h2>
-                    <div class="info-item">
-                        <strong>Nome:</strong> <span>{{ pessoa['nome_bnmp'] }}</span>
+                <div class="dento-div">
+                    <div class="card-imagem">
+                        <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
                     </div>
-                    <div class="info-item">
-                        <strong>Nome do pai:</strong> <span>{{ pessoa['pai_bnmp'] if pessoa['pai_bnmp'] is not none else 'NÃO INFORMADO' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <strong>Nome da mãe:</strong> <span>{{ pessoa['mae_bnmp'] }}</span>
-                    </div>
-                    <div class="info-item">
-                        <strong>ID BNMP:</strong> <span>{{ pessoa['id_bnmp'] }}</span>
-                    </div>
-                    <div class="info-item">
-                        <strong>BNMP:</strong> <span>{{ pessoa['bnmp_campo'] if pessoa['bnmp_campo'] is not none else 'NÃO INFORMADO' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <strong>ORIGEM:</strong><span>BNMP</span>
+                    <div class="card-informacoes">
+                        <h2>{{ nome_bnmp }}</h2>
+                        {% for campo, valor in campos_bnmp.items() %}
+                        <div class="info-item">
+                            <strong>{{ campo.replace('_', ' ')|upper }}:</strong> <span>{{ valor }}</span>
+                        </div>
+                        {% endfor %}
+                        <div class="info-item">
+                            <strong>ORIGEM:</strong><span>BNMP</span>
+                        </div>
                     </div>
                 </div>
+
             </div>
 
             <div class="score-similaridade">
@@ -58,25 +52,12 @@
                     <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
                 </div>
                 <div class="card-informacoes">
-                    <h2>{{ pessoa['nome_ro_civil'] }}</h2>
+                    <h2>{{ nome_ro_civil }}</h2>
+                    {% for campo, valor in campos_ro_civil.items() %}
                     <div class="info-item">
-                        <strong>Nome:</strong> <span>{{ pessoa['nome_ro_civil'] }}</span>
+                        <strong>{{ campo.replace('_', ' ')|upper }}:</strong> <span>{{ valor }}</span>
                     </div>
-                    <div class="info-item">
-                        <strong>Nome do pai:</strong> <span>{{ pessoa['pai_ro_civil'] if pessoa['pai_ro_civil'] is not none else 'NÃO INFORMADO' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <strong>Nome da mãe:</strong> <span>{{ pessoa['mae_ro_civil'] }}</span>
-                    </div>
-                    <div class="info-item">
-                        <strong>Processo:</strong> <span>{{ pessoa['id_ro_civil'] }}</span>
-                    </div>
-                    <div class="info-item">
-                        <strong>CPF:</strong> <span>{{ pessoa['cpf_ro_civil'] if pessoa['cpf_ro_civil'] is not none else 'NÃO INFORMADO' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <strong>RG:</strong> <span>{{ pessoa['rg_ro_civil'] if pessoa['rg_ro_civil'] is not none else 'NÃO INFORMADO' }}</span>
-                    </div>
+                    {% endfor %}
                     <div class="info-item">
                         <strong>ORIGEM:</strong><span>Base Civil - RO</span>
                     </div>
@@ -95,6 +76,12 @@
                 </form>
             </div>
         </div>
+        {% else %}
+        <div class="estado-vazio">
+            <h2>Sem comparações pendentes</h2>
+            <p>Não há registros no arquivo de pendências para validação humana.</p>
+        </div>
+        {% endif %}
     </div>
 
     <script>

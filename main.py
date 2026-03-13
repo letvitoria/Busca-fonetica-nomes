@@ -18,4 +18,4 @@ app.jinja_loader = ChoiceLoader([
 ])
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, exclude_patterns=["*.csv"])
