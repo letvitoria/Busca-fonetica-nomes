@@ -10,53 +10,86 @@ body{
 .cards-container{
     display: flex;
     justify-content: center;
+    align-items: stretch; /* garante cards com mesma altura */
     gap: 20px;
-    padding: 18px 16px 14px;
+    padding: 18px 36px 14px;
     flex-wrap: wrap;
     flex: 1;
     overflow: hidden;
 }
+
 .pessoa-card{
     background-color: rgb(20, 45, 75);
     border-radius: 12px;
     padding: 8px 30px;
-    width: min(42vw, 560px);
+    width: min(46vw, 640px);
+    height: clamp(520px, calc(100vh - 220px), 620px); /* altura padronizada */
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     display: flex;
     flex-direction: column;
     align-items: center;
-    max-height: calc(100vh - 273px);
     min-height: 0;
 }
+
+.dentro-div {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    margin: 8px;
+}
+
 .card-imagem{
     width: 100%;
     margin-bottom: 12px;
     text-align: center;
+    flex: 0 0 auto;
 }
 .card-imagem img{
-    width: 42%;
-    max-width: 90px;
+    width: 70%;        /* diminui o tamanho visual */
+    max-width: 150px;  /* limite máximo */
     height: auto;
-    border-radius: 8px;
-    object-fit: cover;
+    object-fit: contain;
+    border-radius: 5%;
 }
 .card-informacoes{
     width: 100%;
-    overflow-y: auto;
-    padding-right: 6px;
+    flex: 1 1 auto;      /* ocupa o mesmo espaço nos 2 cards */
     min-height: 0;
+    overflow-y: auto;    /* rolagem apenas na área de infos */
+    overflow-x: hidden;
+    padding-right: 6px;
 }
+
+/* ...existing code... */
+
+.comparacao-item.ativa {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between; /* antes: center */
+    align-items: stretch; /* evita diferença visual entre cards */
+    align-content: flex-start;
+    gap: 16px 18px;
+    width: 100%;
+    max-width: 1700px;   /* controla abertura máxima */
+    margin: 0 auto;      /* centraliza o bloco inteiro */
+    padding: 0 24px;     /* respiro lateral */
+    height: 100%;
+}
+
 .card-informacoes h2{
     margin-top: 0;
-    margin-bottom: 12px;
+    margin-bottom: 24px;
     text-align: center;
     font-size: 18px; /* Fonte do nome da pessoa */
     color: #ffffff;
 }
 .info-item{
     display: flex;
-    justify-content: space-between;
-    gap: 12px;
+    justify-content: flex-start; /* antes: space-between */
+    align-items: baseline;
+    gap: 8px;
     padding: 5px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     font-size: 0.92rem;
@@ -66,11 +99,15 @@ body{
 }
 .info-item strong{
     color: #b0c4de;
+    flex: 0 0 auto;
 }
 .info-item span{
     color: #ffffff;
-    text-align: right;
+    text-align: left;   /* antes: right */
+    flex: 0 1 auto;
+    word-break: break-word;
 }
+
 .nav-bar{
     display: flex;
     width: 100%;
@@ -294,6 +331,8 @@ a{
 
     .pessoa-card{
         width: min(100%, 700px);
+        height: auto;
+        min-height: 520px; /* mantém padrão no mobile/tablet */
         max-height: 78vh;
     }
 }

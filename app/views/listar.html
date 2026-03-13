@@ -23,7 +23,7 @@
         <div class="comparacao-item ativa">
             
             <div class="pessoa-card">
-                <div class="dento-div">
+                <div class="dentro-div">
                     <div class="card-imagem">
                         <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
                     </div>
@@ -39,7 +39,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
 
             <div class="score-similaridade">
@@ -48,18 +47,20 @@
             </div>
 
             <div class="pessoa-card"> 
-                <div class="card-imagem">
-                    <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
-                </div>
-                <div class="card-informacoes">
-                    <h2>{{ nome_ro_civil }}</h2>
-                    {% for campo, valor in campos_ro_civil.items() %}
-                    <div class="info-item">
-                        <strong>{{ campo.replace('_', ' ')|upper }}:</strong> <span>{{ valor }}</span>
+                <div class="dentro-div">
+                    <div class="card-imagem">
+                        <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
                     </div>
-                    {% endfor %}
-                    <div class="info-item">
-                        <strong>ORIGEM:</strong><span>Base Civil - RO</span>
+                    <div class="card-informacoes">
+                        <h2>{{ nome_ro_civil }}</h2>
+                        {% for campo, valor in campos_ro_civil.items() %}
+                        <div class="info-item">
+                            <strong>{{ campo.replace('_', ' ')|upper }}:</strong> <span>{{ valor }}</span>
+                        </div>
+                        {% endfor %}
+                        <div class="info-item">
+                            <strong>ORIGEM:</strong><span>Base Civil - RO</span>
+                        </div>
                     </div>
                 </div>
             </div>
