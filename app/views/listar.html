@@ -8,79 +8,95 @@
 </head>
 <body>
     <div class="nav-bar">
-        <a href="{{ url_for('home.index') }}">Início</a>
         <a href="{{ url_for('home.csv_data') }}">Listar</a>
         <a href="{{ url_for('home.relatorio') }}">Relatório</a>
-        <a href="{{ url_for('home.csv') }}">CSV</a>
     </div> 
 
-    <div class="cards-container">
-        {% for pessoa in pessoas %}
-        <div class="pessoa-card">
-            <div class="card-imagem">
-                <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
-            </div>
-            <div class="card-informacoes">
-                <h2>{{ pessoa['nome_bnmp'] }}</h2>
-                <div class="info-item">
-                    <strong>Nome:</strong> <span>{{ pessoa['nome_bnmp'] }}</span>
-                </div>
-                <div class="info-item">
-                    <strong>Nome do pai:</strong> <span>{{ pessoa['pai_bnmp'] if pessoa['pai_bnmp'] is not none else 'NÃO INFORMADO' }}</span>
-                </div>
-                <div class="info-item">
-                    <strong>Nome da mãe:</strong> <span>{{ pessoa['mae_bnmp'] }}</span>
-                </div>
-                <div class="info-item">
-                    <strong>ID BNMP:</strong> <span>{{ pessoa['id_bnmp'] }}</span>
-                </div>
-                <div class="vacuo">
-                    <strong>ORIGEM:</strong><span>BNMP</span>
-                </div>
-            </div>
+    <div class="navegacao-container">
+        <div class="contador">
+            <strong>Comparação Atual:</strong> 1 de <span id="total-comparacoes">{{ restante }}</span> restantes
         </div>
-
-        <div class="score-similaridade">
-            <h3>Score de Similaridade:</h3>
-            <p>{{ pessoa['score_identidade'] }}%</p>
-        </div>
-
-        <div class="pessoa-card"> 
-            <div class="card-imagem">
-                <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
-            </div>
-            <div class="card-informacoes">
-                <h2>{{ pessoa['nome_ro_civil'] }}</h2>
-                <div class="info-item">
-                    <strong>Nome:</strong> <span>{{ pessoa['nome_ro_civil'] }}</span>
-                </div>
-                <div class="info-item">
-                    <strong>Nome do pai:</strong> <span>{{ pessoa['pai_ro_civil'] if pessoa['pai_ro_civil'] is not none else 'NÃO INFORMADO' }}</span>
-                </div>
-                <div class="info-item">
-                    <strong>Nome da mãe:</strong> <span>{{ pessoa['mae_ro_civil'] }}</span>
-                </div>
-                <div class="info-item">
-                    <strong>Processo:</strong> <span>{{ pessoa['id_ro_civil'] }}</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="desicao">
-            <h3> É a mesma pessoa? </h3>
-            <div class="botoes-container">
-                <button class="btn-sim">
-                    <img src="{{ url_for('static', filename='img/Aceitar-icon.png') }}" alt="Aceitar">SIM
-                </button>
-                <button class="btn-nao">
-                    <img src="{{ url_for('static', filename='img/Negar-icon.png') }}" alt="Negar">NÃO
-                </button>
-            </div>
-        </div>
-
-        <hr style="width: 100%; border: 0.5px solid rgba(255,255,255,0.1); margin: 40px 0;">
-        
-        {% endfor %}
     </div>
+
+    <div class="cards-container">
+        {% if pessoa %}
+        <div class="comparacao-item ativa">
+            
+            <div class="pessoa-card">
+                <div class="dentro-div">
+                    <div class="card-imagem">
+                        <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
+                    </div>
+                    <div class="card-informacoes">
+                        <h2>{{ nome_bnmp }}</h2>
+                        {% for campo, valor in campos_bnmp.items() %}
+                        <div class="info-item">
+                            <strong>{{ campo.replace('_', ' ')|upper }}:</strong> <span>{{ valor }}</span>
+                        </div>
+                        {% endfor %}
+                        <div class="info-item">
+                            <strong>ORIGEM:</strong><span>BNMP</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="score-similaridade">
+                <h3>Score de Similaridade:</h3>
+                <p>{{ pessoa['score_identidade'] }}%</p>
+            </div>
+
+            <div class="pessoa-card"> 
+                <div class="dentro-div">
+                    <div class="card-imagem">
+                        <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
+                    </div>
+                    <div class="card-informacoes">
+                        <h2>{{ nome_ro_civil }}</h2>
+                        {% for campo, valor in campos_ro_civil.items() %}
+                        <div class="info-item">
+                            <strong>{{ campo.replace('_', ' ')|upper }}:</strong> <span>{{ valor }}</span>
+                        </div>
+                        {% endfor %}
+                        <div class="info-item">
+                            <strong>ORIGEM:</strong><span>Base Civil - RO</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="desicao">
+                <h3> É a mesma pessoa? </h3>
+                <form action="{{ url_for('home.decidir') }}" method="POST" class="botoes-container">
+                    <button type="submit" name="decisao" value="sim" class="btn-sim">
+                        <img src="{{ url_for('static', filename='img/Aceitar-icon.png') }}" alt="Aceitar">SIM
+                    </button>
+                    <button type="submit" name="decisao" value="nao" class="btn-nao">
+                        <img src="{{ url_for('static', filename='img/Negar-icon.png') }}" alt="Negar">NÃO
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="estado-vazio">
+            <h2>Sem comparações pendentes</h2>
+            <p>Não há registros no arquivo de pendências para validação humana.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === 's' || e.key === 'S') {
+                // Atalho para SIM
+                const btnSim = document.querySelector('.btn-sim');
+                if(btnSim) btnSim.click();
+            } else if (e.key === 'ArrowLeft' || e.key === 'n' || e.key === 'N') {
+                // Atalho para NÃO
+                const btnNao = document.querySelector('.btn-nao');
+                if(btnNao) btnNao.click();
+            }
+        });
+    </script>
 </body>
 </html>

@@ -1,10 +1,18 @@
 from flask import render_template
-from app.models.busca_model import ler_csv
+from app.models.busca_model import ler_csv, montar_campos_exibicao
 
 class BuscaController:
     def executar(self):
-        model = ler_csv()
-        dados = model.obter_dados_confronto()
-        
-        # 'dados' contém as linhas do CSV com as colunas do BNMP, RO_CIVIL e SCORE
-        return render_template("listar.html", pessoas=dados)
+        dados = ler_csv()
+        if not dados:
+            return render_template("listar.html", pessoa=None, restante=0)
+
+        pessoa = dados[0]
+        dados_exibicao = montar_campos_exibicao(pessoa)
+
+        return render_template(
+            "listar.html",
+            pessoa=pessoa,
+            restante=len(dados),
+            **dados_exibicao,
+        )

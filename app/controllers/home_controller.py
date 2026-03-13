@@ -1,23 +1,37 @@
-from flask import render_template, jsonify
-from app.models.busca_model import ler_csv
+from flask import render_template, jsonify, request, redirect, url_for
+from app.models.busca_model import ler_csv, registrar_decisao_e_remover, montar_campos_exibicao
 
 class HomeController:
+    def _render_primeiro_registro(self):
+        dados = ler_csv()
+        if not dados:
+            return render_template("listar.html", pessoa=None, restante=0)
+
+        pessoa = dados[0]
+        dados_exibicao = montar_campos_exibicao(pessoa)
+
+        return render_template(
+            "listar.html",
+            pessoa=pessoa,
+            restante=len(dados),
+            **dados_exibicao,
+        )
+
     def index(self):
-        return render_template("index.html")
+        return render_template("listar.html")
 
     def listar(self):
-            dados = ler_csv() # Busca os dados do CSV
-            return render_template("listar.html", pessoas=dados)
-    
-    def csv(self):
-        dados = ler_csv() # Busca os dados do CSV
-        return render_template("csv.html", dados=dados)
+            return self._render_primeiro_registro()
     
     def csv_data(self):
-            """Agora retorna a página formatada com os dados do CSV"""
-            dados = ler_csv()
-            # Enviamos os dados para o listar.html sob a variável 'pessoas'
-            return render_template("listar.html", pessoas=dados)
+            """Retorna a página formatada com o primeiro registro pendente"""
+            return self._render_primeiro_registro()
     
+    def decidir(self):
+        decisao = request.form.get('decisao', '')
+        if decisao in ('sim', 'nao'):
+            registrar_decisao_e_remover(decisao)
+        return redirect(url_for('home.csv_data'))
+
     def relatorio(self):
         return render_template("relatorio.html")
