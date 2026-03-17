@@ -5,8 +5,9 @@ from jinja2 import ChoiceLoader, FileSystemLoader
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Adicione static_url_path e static_folder explicitamente
+
 app = Flask(__name__, static_url_path='/static', static_folder='app/static')
+app.secret_key = 'palavra_secreta' 
 FlaskMVC(app)
 
 original_loader = app.jinja_loader  # salva o loader configurado pelo mvc_flask
@@ -18,4 +19,4 @@ app.jinja_loader = ChoiceLoader([
 ])
 
 if __name__ == "__main__":
-    app.run(debug=True, exclude_patterns=["*.csv"])
+    app.run(debug=True, use_reloader=False)

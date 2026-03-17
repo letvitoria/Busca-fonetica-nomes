@@ -14,9 +14,20 @@
 
     <div class="navegacao-container">
         <div class="contador">
-            <strong>Comparação Atual:</strong> 1 de <span id="total-comparacoes">{{ restante }}</span> restantes
+            {% set indice = indice_atual|default(0, true) %}
+            {% if pessoa %}
+            <strong>Comparação Atual:</strong> {{ indice }} de <span id="total-comparacoes">{{ restante + indice - 1 }}</span> totais ({{ restante }} pendentes)
+            {% else %}
+            <strong>Comparações pendentes:</strong> 0
+            {% endif %}
         </div>
     </div>
+
+    {% if feedback %}
+    <div class="feedback-flutuante" id="feedback-alert">
+        <strong>{{ feedback }}</strong>
+    </div>
+    {% endif %}
 
     <div class="cards-container">
         {% if pessoa %}
@@ -68,6 +79,7 @@
             <div class="desicao">
                 <h3> É a mesma pessoa? </h3>
                 <form action="{{ url_for('home.decidir') }}" method="POST" class="botoes-container">
+                    <input type="hidden" name="_method" value="POST">
                     <button type="submit" name="decisao" value="sim" class="btn-sim">
                         <img src="{{ url_for('static', filename='img/Aceitar-icon.png') }}" alt="Aceitar">SIM
                     </button>
@@ -84,17 +96,52 @@
         </div>
         {% endif %}
     </div>
-
     <script>
+        // 1. Lógica para desabilitar botões ao clicar
+        const formDecisao = document.querySelector('.botoes-container');
+        if (formDecisao) {
+            formDecisao.addEventListener('submit', function (e) {
+                const botaoClicado = document.activeElement; 
+                if (botaoClicado && botaoClicado.name === 'decisao') {
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'decisao';
+                    hiddenInput.value = botaoClicado.value;
+                    formDecisao.appendChild(hiddenInput);
+                }
+
+                const botoes = formDecisao.querySelectorAll('button[type="submit"]');
+                botoes.forEach((btn) => {
+                    btn.style.opacity = '0.5';
+                    btn.style.pointerEvents = 'none';
+                });
+            });
+        }
+
+        // 2. Lógica para a mensagem de sucesso sumir sozinha
+        const feedbackMsg = document.getElementById('feedback-alert'); // Garanta que a div tenha esse ID
+        if (feedbackMsg) {
+            setTimeout(() => {
+                // Efeito de fade-out simples
+                feedbackMsg.style.transition = 'opacity 0.5s ease';
+                feedbackMsg.style.opacity = '0';
+                
+                setTimeout(() => {
+                    feedbackMsg.remove();
+                    // Limpa a URL (remove o ?salvo=1...) sem recarregar a página
+                    const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                    window.history.replaceState({path: cleanUrl}, '', cleanUrl);
+                }, 500);
+            }, 2500); // 2.5 segundos de exibição
+        }
+
+        // 3. Atalhos de teclado
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'ArrowRight' || e.key === 's' || e.key === 'S') {
-                // Atalho para SIM
-                const btnSim = document.querySelector('.btn-sim');
-                if(btnSim) btnSim.click();
-            } else if (e.key === 'ArrowLeft' || e.key === 'n' || e.key === 'N') {
-                // Atalho para NÃO
-                const btnNao = document.querySelector('.btn-nao');
-                if(btnNao) btnNao.click();
+            const key = e.key.toLowerCase();
+            if (key === 'arrowright' || key === 's') {
+                document.querySelector('.btn-sim')?.click();
+            } else if (key === 'arrowleft' || key === 'n') {
+                document.querySelector('.btn-nao')?.click();
             }
         });
     </script>
