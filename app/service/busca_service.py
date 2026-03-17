@@ -1,16 +1,35 @@
-def executar_busca():
-    import sqlite3
-    import os
-    import pandas as pd
-    import warnings
-    from sklearn.feature_extraction.text import TfidfVectorizer 
-    from sklearn.neighbors import NearestNeighbors
-    from rapidfuzz import fuzz
-    from unidecode import unidecode
-    from tqdm import tqdm
-    import gc #Limpar a RAM
+import re
+import unicodedata
+import sqlite3
+import os
+import pandas as pd
+import warnings
+from sklearn.feature_extraction.text import TfidfVectorizer 
+from sklearn.neighbors import NearestNeighbors
+from rapidfuzz import fuzz
+from unidecode import unidecode
+from tqdm import tqdm
+import gc #Limpar a RAM
 
-    #Ignorar no log avisos do sklearn
+
+def normalizar_nome_para_comparacao(nome):
+    """Normaliza apenas o nome para comparação de igualdade textual."""
+    if nome is None:
+        return ""
+
+    texto = str(nome)
+    if texto.lower() in ('none', 'null', 'nan'):
+        return ""
+
+    texto = unicodedata.normalize('NFKD', texto)
+    texto = ''.join(char for char in texto if not unicodedata.combining(char))
+    texto = texto.upper().strip()
+    texto = re.sub(r'\s+', ' ', texto)
+    return texto
+
+
+def executar_busca():
+    #Ignorar no log avisos do sklearn 
     warnings.filterwarnings('ignore', category=UserWarning)
     warnings.filterwarnings('ignore', category=FutureWarning)
     warnings.filterwarnings('ignore', category=UserWarning, module=r"sklearn\.utils\.parallel")
@@ -130,15 +149,14 @@ def executar_busca():
                 idx_global = i + idx_lote
                 id_b = ids_bnmp[idx_global]
                 
-                # Normalização rigorosa para comparação: remove acentos e espaços extras
-                n_b_limpo = unidecode(str(nomes_bnmp[idx_global])).strip().upper()
+                # Normalização rigorosa para comparação de NOME: remove acentos e padroniza espaços
+                n_b_limpo = normalizar_nome_para_comparacao(nomes_bnmp[idx_global])
                 
                 for vizinho_idx in indices:
                     id_c = ids_civil[vizinho_idx]
-                    n_c_limpo = unidecode(str(nomes_civil[vizinho_idx])).strip().upper()
+                    n_c_limpo = normalizar_nome_para_comparacao(nomes_civil[vizinho_idx])
                     
-                    # --- CORREÇÃO: Compara nomes SEM acentuação ---
-                    # Se após remover os acentos forem iguais, o script ignora.
+                    # Se os nomes forem iguais após normalização, ignora o par.
                     if n_b_limpo == n_c_limpo:
                         continue
                     
@@ -178,7 +196,8 @@ def executar_busca():
     gc.collect()
 
     # SALVAMENTO 
-    output_path = os.path.join(BASE_DIR, 'pendentes_validacao_filiacao.csv')
+    output_path = os.path.join(BASE_DIR, 'models', 'pendentes_validacao_filiacao.csv')
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
     df_final = pd.DataFrame(resultados_para_humano)
     if not df_final.empty:
         df_final = df_final.sort_values(by='score_identidade', ascending=False)
@@ -192,7 +211,7 @@ def executar_busca():
     del tf_idf_matrix, tf_idf_bnmp, model, vetorizacao
 
     gc.collect()
-    print("✅ RAM liberada com sucesso.")
+    print("RAM liberada!✅")
     return output_path
 
 

@@ -1,6 +1,7 @@
 import csv
 import os
 import pandas as pd
+from typing import Optional, Tuple
 
 
 def _valor_exibicao(valor):
@@ -74,48 +75,65 @@ def ler_csv():
     return []
 
 
+def obter_primeiro_e_total_pendencias() -> Tuple[Optional[dict], int]:
+    """Lê apenas o necessário para a tela: primeiro registro e total pendente."""
+    caminho = os.path.join(os.path.dirname(__file__), 'pendentes_validacao_filiacao.csv')
+
+    if not os.path.exists(caminho):
+        return None, 0
+
+    with open(caminho, mode='r', encoding='utf-8-sig', newline='') as arquivo:
+        leitor = csv.DictReader(arquivo)
+        primeiro = next(leitor, None)
+        if primeiro is None:
+            return None, 0
+
+        total = 1 + sum(1 for _ in leitor)
+        return primeiro, total
+
 def registrar_decisao_e_remover(decisao: str):
-    """Salva a decisão do primeiro registro e o remove da fila pendente."""
+    print(f"DEBUG: Decisão recebida no Model: '{decisao}'")
     caminho = os.path.join(os.path.dirname(__file__), 'pendentes_validacao_filiacao.csv')
     caminho_decididos = os.path.join(os.path.dirname(__file__), 'decididos.csv')
 
     if not os.path.exists(caminho):
-        return
+        return False
 
-    df = pd.read_csv(caminho)
-    if df.empty:
-        return
+    # 1. LER TUDO PARA A MEMÓRIA E FECHAR O ARQUIVO IMEDIATAMENTE
+    linhas_restantes = []
+    primeiro = None
+    colunas_pendentes = []
 
-    primeiro = df.iloc[[0]].copy()
-    primeiro['decisao'] = decisao
+    with open(caminho, mode='r', encoding='utf-8-sig', newline='') as arquivo:
+        leitor = csv.DictReader(arquivo)
+        colunas_pendentes = leitor.fieldnames or []
+        lista_completa = list(leitor)
+        if lista_completa:
+            primeiro = lista_completa[0]
+            linhas_restantes = lista_completa[1:]
 
-    # Acrescenta ao arquivo de decididos
-    escrever_cabecalho = not os.path.exists(caminho_decididos)
-    primeiro.to_csv(caminho_decididos, mode='a', header=escrever_cabecalho, index=False)
+    if primeiro is None:
+        return False
 
-    # Remove o primeiro registro da fila
-    df.iloc[1:].to_csv(caminho, index=False)
+    # 2. SALVAR O DECIDIDO
+    colunas_decididos = list(colunas_pendentes)
+    if 'decisao' not in colunas_decididos:
+        colunas_decididos.append('decisao')
 
-# def executar_busca():
-#     # Função temporariamente desativada
-#     # A busca fonética será implementada depois.
-#     print("Busca desativada temporariamente.")
-#     return None
+    escrever_cabecalho = not os.path.exists(caminho_decididos) or os.path.getsize(caminho_decididos) == 0
+    with open(caminho_decididos, mode='a', encoding='utf-8-sig', newline='') as arquivo_decididos:
+        escritor = csv.DictWriter(arquivo_decididos, fieldnames=colunas_decididos)
+        if escrever_cabecalho:
+            escritor.writeheader()
+        linha_decidida = dict(primeiro)
+        linha_decidida['decisao'] = decisao
+        escritor.writerow(linha_decidida)
 
-# def ler_csv():
-#     """Lê arquivo CSV e retorna lista de dicionários"""
-#     csv_path = os.path.join(os.path.dirname(__file__), 'pendentes_validacao_filiacao.csv')
-    
-#     if not os.path.exists(csv_path):
-#         return []
-    
-#     dados = []
-#     try:
-#         with open(csv_path, 'r', encoding='utf-8') as file:
-#             reader = csv.DictReader(file)
-#             for row in reader:
-#                 dados.append(row)
-#     except Exception as e:
-#         print(f"Erro ao ler CSV: {e}")
-    
-#     return dados
+    # 3. REESCREVER O PENDENTES (SEM O PRIMEIRO)
+    with open(caminho, mode='w', encoding='utf-8-sig', newline='') as arquivo_pendentes:
+        escritor = csv.DictWriter(arquivo_pendentes, fieldnames=colunas_pendentes)
+        escritor.writeheader()
+        escritor.writerows(linhas_restantes)
+
+    return True
+

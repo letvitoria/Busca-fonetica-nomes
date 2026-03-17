@@ -7,3 +7,4 @@ Fluxo de Tarefas
 4 - Salva relatório com os resultados positivos. 
 5 - FIM
 
+Verificar se home.decidir aceita explicitamente o método POST. No seu controlador, ela parece padrão, mas confirme se o mvc-flask não exige decoradores específicos se você sair do padrão.
