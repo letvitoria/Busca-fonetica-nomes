@@ -32,7 +32,7 @@
     <div class="cards-container">
         {% if pessoa %}
         <div class="comparacao-item ativa">
-            
+<!---------------------------------------------------------------------------------------------------------------------->                   
             <div class="pessoa-card">
                 <div class="dentro-div">
                     <div class="card-imagem">
@@ -56,12 +56,17 @@
                 <h3>Score de Similaridade:</h3>
                 <p>{{ pessoa['score_identidade'] }}%</p>
             </div>
-
+<!---------------------------------------------------------------------------------------------------------------------->        
             <div class="pessoa-card"> 
                 <div class="dentro-div">
                     <div class="card-imagem">
-                        <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Imagem - pessoa">
+                        {% if foto_ro_base64 %}
+                            <img src="data:image/jpeg;base64,{{ foto_ro_base64 }}" alt="Foto Base Civil">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='img/sem-foto.jpg') }}" alt="Sem foto">
+                        {% endif %}
                     </div>
+                    
                     <div class="card-informacoes">
                         <h2>{{ nome_ro_civil }}</h2>
                         {% for campo, valor in campos_ro_civil.items() %}
@@ -75,7 +80,7 @@
                     </div>
                 </div>
             </div>
-
+<!---------------------------------------------------------------------------------------------------------------------->        
             <div class="desicao">
                 <h3> É a mesma pessoa? </h3>
                 <form action="{{ url_for('home.decidir') }}" method="POST" class="botoes-container">
