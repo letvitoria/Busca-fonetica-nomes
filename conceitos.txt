@@ -7,4 +7,34 @@ Fluxo de Tarefas
 4 - Salva relatório com os resultados positivos. 
 5 - FIM
 
-Verificar se home.decidir aceita explicitamente o método POST. No seu controlador, ela parece padrão, mas confirme se o mvc-flask não exige decoradores específicos se você sair do padrão.
+Como rodar (passo a passo)
+1) Abrir a pasta: cd Busca-fonetica-nomes
+Abra no VS Code a pasta:
+
+Busca-fonetica\Busca-fonetica-nomes
+
+2) Ativar ambiente virtual
+No terminal, dentro dessa pasta, ative o .venv:
+
+Windows PowerShell: ativar .\.venv\Scripts\Activate
+Quando ativa, normalmente aparece (.venv) no começo da linha.
+
+3) Instalar dependências (se for primeira vez)
+Se tiver requirements.txt, instale.
+Se não tiver, use as libs que o projeto já importa (Flask, pandas, requests, sklearn, rapidfuzz, etc.).
+
+4) Garantir arquivo de pendências
+O app lê:
+app/models/pendentes_validacao_filiacao.csv
+
+Sem esse arquivo, não há cards para validar.
+
+5) Iniciar o servidor
+Rode o arquivo principal:
+
+main.py
+
+Ele sobe um servidor Flask local (modo debug).
+
+6) Abrir no navegador
+Acesse o endereço local mostrado no terminal (normalmente algo como http://127.0.0.1:5000/).
