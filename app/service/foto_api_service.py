@@ -77,7 +77,7 @@ def _baixar_imagem_base64(foto_url, headers, url_cards):
         if img_resp.status_code == 200 and img_resp.content:
             return base64.b64encode(img_resp.content).decode('utf-8')
 
-        # Fallback sem header (alguns endpoints de mídia são públicos)
+        # Fallback sem header 
         img_resp = requests.get(url_final, timeout=5)
         if img_resp.status_code == 200 and img_resp.content:
             return base64.b64encode(img_resp.content).decode('utf-8')
@@ -149,7 +149,7 @@ def buscar_foto_na_api_render(nome_completo, nome_pai, nome_mae):
     headers = {'Authorization': f'Token {token}'}
     url_base = 'http://10.69.7.31/'
     url_cards = urljoin(url_base, 'cards/humans/')
-    # Neste ambiente, "name_contains" retorna resultados consistentes para nome completo.
+    # "name_contains" retorna resultados consistentes para nome completo.
     params = {
         'name_contains': nome_completo.strip().upper(),
         'limit': 30,
@@ -161,7 +161,7 @@ def buscar_foto_na_api_render(nome_completo, nome_pai, nome_mae):
         if response.status_code == 200:
             resultados = response.json().get('results', [])
             if resultados:
-                # Isso vai imprimir no seu terminal TODAS as chaves que o primeiro registro possui
+                # Isso vai imprimir no terminal TODAS as chaves que o primeiro registro possui
                 print(f"DEBUG - Chaves disponíveis no registro: {resultados[0].keys()}")
             
             nome_alvo = _normalizar_texto(nome_completo)
@@ -184,7 +184,7 @@ def buscar_foto_na_api_render(nome_completo, nome_pai, nome_mae):
 
                 meta = res.get('meta') if isinstance(res.get('meta'), dict) else {}
 
-                # API pode variar o nome dos campos; tentamos múltiplas chaves.
+                #Multiplas chaves para o caso de nomes diferentes nos campos do FF
                 mae_api = _normalizar_texto(
                     _obter_primeiro_campo(
                         res,

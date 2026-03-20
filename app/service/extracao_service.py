@@ -20,7 +20,6 @@ def processar_decididos():
 
     for _, linha in matches.iterrows():
         nome = linha['nome_ro_civil']
-        # CUIDADO: Verifique se no CSV o nome da coluna é pai_ro_civil ou filiacao
         mae = linha.get('mae_ro_civil', 'NÃO INFORMADO')
         pai = linha.get('pai_ro_civil', 'NÃO INFORMADO')
 

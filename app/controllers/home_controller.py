@@ -21,7 +21,6 @@ class HomeController:
         if not pessoa:
             return render_template("listar.html", pessoa=None, restante=0, feedback=feedback)
 
-        # --- AQUI ESTÁ A LÓGICA DA FOTO ---
         # Buscamos a foto usando os dados que vieram do CSV (Base Civil de RO)
         foto_base64 = buscar_foto_na_api_render(
             pessoa.get('nome_ro_civil'),
